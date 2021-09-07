@@ -1,0 +1,73 @@
+
+<ng-container *ngIf="type === 'pie'">
+  <ngx-charts-pie-chart style="display:block"
+    [scheme]="scheme"
+    [results]="results"
+    [legend]="legend"
+    [legendPosition]="legendPosition"
+    [legendTitle]="legendTitle"
+
+    [labels]="labels"
+    [doughnut]="true"
+    (select)="select.emit($event)"
+    (activate)="activate.emit($event)"
+    (deactivate)="deactivate.emit($event)"
+  >
+  </ngx-charts-pie-chart>
+</ng-container>
+
+<ng-container *ngIf="type === 'bars'">
+  <ngx-charts-bar-vertical style="display:block"
+    [scheme]="scheme"
+    [results]="results"
+    [legend]="legend"
+    [legendPosition]="legendPosition"
+    [legendTitle]="legendTitle"
+
+    [xAxis]="xAxis"
+    [yAxis]="yAxis"
+    [showXAxisLabel]="showXAxisLabel"
+    [showYAxisLabel]="showYAxisLabel"
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel"
+
+    (select)="select.emit($event)"
+    (activate)="activate.emit($event)"
+    (deactivate)="deactivate.emit($event)">
+  </ngx-charts-bar-vertical>
+</ng-container>
+
+<ng-container *ngIf="type === 'line'">
+  <ngx-charts-line-chart style="display:block"
+    [scheme]="scheme"
+    [results]="results"
+    [legend]="legend"
+    [legendPosition]="legendPosition"
+    [legendTitle]="legendTitle"
+
+    [showGridLines]="showGridLines"
+    [xAxis]="xAxis"
+    [yAxis]="yAxis"
+    [showXAxisLabel]="showXAxisLabel"
+    [showYAxisLabel]="showYAxisLabel"
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel"
+
+    (select)="select.emit($event)"
+    (activate)="activate.emit($event)"
+    (deactivate)="deactivate.emit($event)">
+
+    <ng-template #tooltipTemplate let-model="model">
+      <p><strong>{{model.series}}</strong></p>
+      <p><span>{{model.price | currency: 'EUR'}}</span></p>
+    </ng-template>
+
+    <ng-template #seriesTooltipTemplate let-model="model">
+      <p *ngFor="let item of model">
+        <strong>{{item.series}}: </strong>
+        <span>{{item.price | currency: 'EUR'}}</span>
+      </p>
+    </ng-template>
+
+  </ngx-charts-line-chart>
+</ng-container>
