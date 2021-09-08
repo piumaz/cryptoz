@@ -73,6 +73,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public uiForm: FormGroup = new FormGroup({});
   public controlCheckSymbol: FormControl = new FormControl(null);
 
+  startedAt: number = 0;
   isStarted: boolean = false;
   isLoading: boolean = false;
 
@@ -175,6 +176,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   clear() {
     console.log('clear');
+    this.startedAt = 0;
     this.history = [];
     this.historyRows = [];
     this.chartData = [];
@@ -197,6 +199,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     console.log('start');
     this.isStarted = true;
 
+    if (!this.startedAt) {
+      this.startedAt = Date.now();
+    }
+
     this.check();
 
     const milliseconds = this.uiForm.value.minutes * 60 * 1000;
@@ -204,6 +210,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadPrices();
     this.intervalSub = interval(milliseconds).subscribe((x: number) => {
       console.log('Load prices:', x);
+      if (!this.startedAt) {
+        this.startedAt = Date.now();
+      }
       this.loadPrices();
     });
   }

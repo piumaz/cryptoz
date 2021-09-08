@@ -69,6 +69,12 @@
   </div>
 </div>
 
+<div *ngIf="historyRows.length" class="my-4">
+  <p>
+    From {{startedAt | date : 'short'}}, {{historyRows.length}} rows
+  </p>
+</div>
+
 <div *ngIf="chartData.length" class="rounded-lg ring-1 ring-gray-900 ring-opacity-5 my-4">
   <app-charts style="height:300px"
     type="line"
