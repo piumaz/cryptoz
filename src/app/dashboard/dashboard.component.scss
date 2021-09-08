@@ -11,3 +11,16 @@
   background-color: white;
   color: #666666;
 }
+
+.price {
+  display: flex;
+  align-content: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: flex-end;
+
+  span {
+    flex: 1;
+  }
+}

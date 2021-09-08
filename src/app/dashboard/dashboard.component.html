@@ -105,9 +105,16 @@
 
     <tbody class="bg-white divide-y divide-gray-200">
       <tr *ngFor="let item of historyRows; let i = index">
-        <td *ngFor="let currency of getSymbols()" class="px-6 py-4 whitespace-nowrap"
-            [class]="getPriceColor(item[currency], historyRows[i+1]? historyRows[i+1][currency] : item[currency])">
-          {{item[currency]}}
+        <td *ngFor="let currency of getSymbols()" class="px-6 py-4 whitespace-nowrap text-right"
+            [style.color]="getPriceColor(item[currency], historyRows[i+1]? historyRows[i+1][currency] : item[currency])">
+
+          <span class="price">
+          <ng-container [ngSwitch]="getPriceColor(item[currency], historyRows[i+1]? historyRows[i+1][currency] : item[currency])">
+            <mat-icon *ngSwitchCase="'red'">arrow_downward</mat-icon>
+            <mat-icon *ngSwitchCase="'green'">arrow_upward</mat-icon>
+          </ng-container>
+          <span>{{item[currency]}}</span>
+            </span>
         </td>
       </tr>
     </tbody>

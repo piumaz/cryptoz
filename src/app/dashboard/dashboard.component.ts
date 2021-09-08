@@ -145,7 +145,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         name: symbol,
         series: history.map((price: number, i: number) => {
 
-          if(!price) {
+          if(price === null) {
             return {
               name: i.toString(),
               value: 0,
@@ -155,6 +155,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           const first = price;
           const last = history[i+1] || price;
+
+          rate = rate + -(((first - last) / first) * 100);
 
           return {
             name: i.toString(),
@@ -271,7 +273,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     if (!history.length) return 0;
 
-    history.forEach((item: number) => {
+    history.forEach((item: number, i: number) => {
       sum = sum + item;
     });
 
