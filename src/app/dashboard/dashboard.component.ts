@@ -1,6 +1,6 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {BehaviorSubject, interval, Observable, of, Subscription} from "rxjs";
-import {filter, first, map, tap} from "rxjs/operators";
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {BehaviorSubject, interval, Observable, of, Subject, Subscription} from "rxjs";
+import {filter, first, map, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
@@ -16,7 +16,7 @@ export interface Currency {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
 
   public currencyMetaData: any = {
     BTC: {
@@ -34,11 +34,14 @@ export class DashboardComponent implements OnInit {
     MATIC: {
       name: 'matic-network'
     },
-    DOGE: {
-      name: 'dogecoin'
-    },
     XTZ: {
       name: 'tezos'
+    },
+    QNT: {
+      name: 'quant-network'
+    },
+    DOGE: {
+      name: 'dogecoin'
     },
     SHIB: {
       name: 'shiba-inu'
@@ -49,16 +52,15 @@ export class DashboardComponent implements OnInit {
     domain: [
       '#FF8A80',
       '#EA80FC',
-      '#8C9EFF',
-      '#80D8FF',
-      '#A7FFEB',
-      '#CCFF90',
+      '#9ba9f5',
+      '#4ad2b3',
       '#f8c11a',
       '#FF9E80',
       '#8e4bdb',
-      '#e77fa3',
       '#419a2d',
+      '#e77fa3',
       '#ee5945',
+      '#3288c9',
     ]
   };
 
@@ -82,17 +84,43 @@ export class DashboardComponent implements OnInit {
   @ViewChild('symbolsInput') symbolsInput: ElementRef<HTMLInputElement> | undefined;
   selectedSymbols: string[] = [];
 
+  protected destroy$ = new Subject();
+
   constructor(private http: HttpClient,
               private fb: FormBuilder) {
   }
 
   ngOnInit(): void {
+
+    const storage = this.getStorage();
+    this.selectedSymbols = storage?.selectedSymbols || [];
+    const minutes = storage?.minutes || 1;
+
     this.uiForm = this.fb.group({
-      minutes: [1, Validators.required],
+      minutes: [minutes, Validators.required],
       symbols: [null, Validators.required],
     });
 
-    this.check();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setStorage() {
+    const storage: any = {
+      selectedSymbols: this.selectedSymbols,
+        minutes: this.uiForm.get('minutes')?.value
+    }
+
+    localStorage.setItem('cryptoz.form', JSON.stringify(storage));
+  }
+  getStorage(): any {
+    const storage = localStorage.getItem('cryptoz.form') || '{}';
+    const storageValue: any = JSON.parse(storage);
+
+    return storageValue;
   }
 
   getRandomColor() {
@@ -116,10 +144,17 @@ export class DashboardComponent implements OnInit {
       let item = {
         name: symbol,
         series: history.map((price: number, i: number) => {
+
+          if(!price) {
+            return {
+              name: i.toString(),
+              value: 0,
+              price: null
+            }
+          }
+
           const first = price;
           const last = history[i+1] || price;
-
-          rate = rate + -(((first - last) / first) * 100);
 
           return {
             name: i.toString(),
@@ -139,6 +174,7 @@ export class DashboardComponent implements OnInit {
   clear() {
     console.log('clear');
     this.history = [];
+    this.historyRows = [];
     this.chartData = [];
   }
 
@@ -146,6 +182,7 @@ export class DashboardComponent implements OnInit {
     console.log('stop');
     this.isStarted = false;
     this.intervalSub.unsubscribe();
+    this.ngOnDestroy();
   }
 
   start() {
@@ -153,20 +190,26 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
+    this.setStorage();
+
     console.log('start');
     this.isStarted = true;
+
+    this.check();
+
     const milliseconds = this.uiForm.value.minutes * 60 * 1000;
-    const symbols = this.getSelectedManagedSymbols();
-    this.loadPrices(symbols);
+
+    this.loadPrices();
     this.intervalSub = interval(milliseconds).subscribe((x: number) => {
       console.log('Load prices:', x);
-      this.loadPrices(symbols);
+      this.loadPrices();
     });
   }
 
   check() {
     // controllo i prezzi del momento e li salvo
     this.prices$.pipe(
+      takeUntil(this.destroy$),
       filter((result: any) => result.length)
     ).subscribe((result: any) => {
 
@@ -232,7 +275,10 @@ export class DashboardComponent implements OnInit {
       sum = sum + item;
     });
 
-    const average = (sum / history.length).toFixed(2);
+    let fixed = history[0].toString().split('.');
+    fixed = fixed[1] ? fixed[1].length : 0;
+
+    const average = (sum / history.length).toFixed(fixed);
 
     return average;
   }
@@ -297,7 +343,13 @@ export class DashboardComponent implements OnInit {
     return this.history[symbol] ? this.history[symbol].reverse()[0] : null;
   }
 
-  loadPrices(symbols: string[]): void {
+  loadPrices(): void {
+
+    const symbols: string[] = this.getSelectedManagedSymbols();
+
+    if (!symbols.length) {
+      return;
+    }
 
     let ids: string = '';
     symbols.forEach((item: string) => {
@@ -307,6 +359,7 @@ export class DashboardComponent implements OnInit {
     const url = `https://api.coingecko.com/api/v3/simple/price?vs_currencies=eur&ids=${ids}`;
     this.isLoading = true;
     this.http.get(url).pipe(
+      takeUntil(this.destroy$),
       map((result: any) => {
 
         let r: any[] = [];
@@ -334,6 +387,8 @@ export class DashboardComponent implements OnInit {
       this.symbolsInput.nativeElement.value = '';
       this.uiForm.get('symbols')?.patchValue(null);
     }
+
+    this.setStorage();
   }
 
   getSelectedManagedSymbols() {
@@ -347,6 +402,18 @@ export class DashboardComponent implements OnInit {
     if (index >= 0) {
       this.selectedSymbols.splice(index, 1);
     }
+
+    delete this.history[symbol];
+    this.historyRows = this.historyRows.map((item) => {
+      delete item[symbol];
+      return item;
+    });
+
+    this.chartData = this.chartData.filter((item) => {
+      return item.name !== symbol;
+    });
+
+    this.setStorage();
   }
 
   getManagedSymbols(): string[] {
@@ -363,7 +430,7 @@ export class DashboardComponent implements OnInit {
 
     result.forEach((item: any) => {
       if (!this.history[item.symbol]) {
-        this.history[item.symbol] = [];
+        this.history[item.symbol] = new Array(this.historyRows.length).fill(item.price);
       }
       this.history[item.symbol].push(item.price);
     });

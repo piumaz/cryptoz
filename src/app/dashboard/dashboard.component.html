@@ -1,5 +1,5 @@
 
-<form [formGroup]="uiForm" class="md:grid md:grid-cols-3 md:gap-6 items-end">
+<form [formGroup]="uiForm" class="md:flex md:flex-row md:gap-6 items-end">
 
   <div class="mb-2">
     <label>Loop (minutes):</label>
@@ -12,14 +12,6 @@
 <!--    <input type="text" formControlName="symbols"/>-->
 
     <mat-chip-list #symbolList>
-      <mat-chip
-        *ngFor="let symbol of getSelectedManagedSymbols()"
-        [selectable]="false"
-        [removable]="!isStarted"
-        (removed)="removeSelectedManagedSymbols(symbol)">
-        {{symbol}}
-        <mat-icon matChipRemove>cancel</mat-icon>
-      </mat-chip>
       <input
         placeholder="Add symbol..."
         #symbolsInput
@@ -55,6 +47,16 @@
 
 </form>
 
+<div class="my-2">
+  <mat-chip
+    *ngFor="let symbol of getSelectedManagedSymbols()"
+    [selectable]="false"
+    [removable]="true"
+    (removed)="removeSelectedManagedSymbols(symbol)">
+    {{symbol}}
+    <mat-icon matChipRemove>cancel</mat-icon>
+  </mat-chip>
+</div>
 
 <div *ngIf="controlCheckSymbol.value">
   <h3>I suggest you...</h3>
@@ -81,7 +83,7 @@
     [results]="chartData"></app-charts>
 </div>
 
-<div *ngIf="historyRows.length">
+<div *ngIf="historyRows.length" class="my-4">
 
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
@@ -90,9 +92,12 @@
           <div [style.color]="colorScheme.domain[i]"><strong>{{currency}}</strong></div>
           <input type="radio" value="{{currency}}" [formControl]="controlCheckSymbol" class="inline-block">
           <div class="text-xs">
-            Average: {{average[currency]}}<br/>
-            Rate:
-            <span [class.green]="rate[currency] > 0" [class.red]="rate[currency] < 0">{{rate[currency]}}%</span>
+            <!--Average:-->
+            {{average[currency]}}<br/>
+            <!--Rate:-->
+            <span class="rounded-md ring-1 ring-gray-900 ring-opacity-5 px-1" [class.grey]="rate[currency] == 0" [class.green]="rate[currency] > 0" [class.red]="rate[currency] < 0">
+              {{rate[currency]}}%
+            </span>
           </div>
         </th>
       </tr>
