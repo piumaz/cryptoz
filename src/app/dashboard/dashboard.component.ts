@@ -1,5 +1,5 @@
 import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {BehaviorSubject, interval, Observable, of, Subject, Subscription} from "rxjs";
+import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription} from "rxjs";
 import {filter, first, map, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
@@ -96,9 +96,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const storage = this.getStorage();
     this.selectedSymbols = storage?.selectedSymbols || [];
     const minutes = storage?.minutes || 1;
+    const service = storage?.service || null;
 
     this.uiForm = this.fb.group({
       minutes: [minutes, Validators.required],
+      service: [service, Validators.required],
       symbols: [null, Validators.required],
     });
 
@@ -112,7 +114,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   setStorage() {
     const storage: any = {
       selectedSymbols: this.selectedSymbols,
-        minutes: this.uiForm.get('minutes')?.value
+      minutes: this.uiForm.get('minutes')?.value,
+      service: this.uiForm.get('service')?.value
     }
 
     localStorage.setItem('cryptoz.form', JSON.stringify(storage));
@@ -154,15 +157,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }
           }
 
-          const first = price;
-          const last = history[i+1] || price;
-
-          rate = rate + -(((first - last) / first) * 100);
-
           return {
             name: i.toString(),
-            value: rate.toFixed(2),
-            price: last
+            value: this.diff(price, history[0]),
+            price: price
           }
         })
       }
@@ -185,6 +183,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   stop() {
     console.log('stop');
     this.isStarted = false;
+    this.uiForm.get('minutes')?.enable();
     this.intervalSub.unsubscribe();
     this.ngOnDestroy();
   }
@@ -206,10 +205,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.check();
 
     const milliseconds = this.uiForm.value.minutes * 60 * 1000;
+    this.uiForm.get('minutes')?.disable();
 
     this.loadPrices();
     this.intervalSub = interval(milliseconds).subscribe((x: number) => {
-      console.log('Load prices:', x);
+      // console.log('Load prices:', x);
       if (!this.startedAt) {
         this.startedAt = Date.now();
       }
@@ -300,10 +300,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const last = history[0];
     const first = history[history.length - 1];
 
-    // ((Valore finale-Valore iniziale)/Valore iniziale) x 100
-    const rate = (((first - last) / first) * 100).toFixed(2);
+    return this.diff(first, last);
+  }
 
-    return rate;
+  diff(from: number, to: number) {
+    if (!to) {
+      to = from;
+    }
+    return (((from - to) / from) * 100).toFixed(2);
   }
 
   /**
@@ -354,6 +358,67 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.history[symbol] ? this.history[symbol].reverse()[0] : null;
   }
 
+  loadPricesFromCoinbase(symbols: string[]): Observable<any> {
+
+    let observables: any = {};
+
+    symbols.forEach((symbol: string) => {
+      observables[symbol] = this.http.get(`https://api.coinbase.com/v2/prices/${symbol}-EUR/spot`).pipe(
+        map((result: any) => {
+          return {
+            symbol: symbol,
+            price: Number(result.data.amount)
+          };
+        })
+      );
+
+    });
+
+    return forkJoin(observables).pipe(
+      takeUntil(this.destroy$),
+      map((result: any) => {
+
+        let rows: any[] = [];
+
+        const symbols = Object.keys(result);
+
+        symbols.forEach((symbol: string) => {
+          rows.push(result[symbol]);
+        });
+
+        return rows;
+      })
+    );
+
+  }
+
+  loadPricesFromCoingecko(symbols: string[]): Observable<any> {
+
+    let ids: string = '';
+    symbols.forEach((item: string) => {
+      ids += this.currencyMetaData[item].name + ',';
+    });
+
+    const url = `https://api.coingecko.com/api/v3/simple/price?vs_currencies=eur&ids=${ids}`;
+    return this.http.get(url).pipe(
+      takeUntil(this.destroy$),
+      map((result: any) => {
+
+        let rows: any[] = [];
+        symbols.forEach((item: string) => {
+          const name = this.currencyMetaData[item].name;
+          rows.push({
+            symbol: item,
+            price: result[name].eur
+          });
+        });
+
+        return rows;
+      })
+    );
+
+  }
+
   loadPrices(): void {
 
     const symbols: string[] = this.getSelectedManagedSymbols();
@@ -362,33 +427,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    let ids: string = '';
-    symbols.forEach((item: string) => {
-      ids += this.currencyMetaData[item].name + ',';
-    });
-
-    const url = `https://api.coingecko.com/api/v3/simple/price?vs_currencies=eur&ids=${ids}`;
     this.isLoading = true;
-    this.http.get(url).pipe(
-      takeUntil(this.destroy$),
-      map((result: any) => {
+    const service = this.uiForm.get('minutes')?.value;
 
-        let r: any[] = [];
-        symbols.forEach((item: string) => {
-          const name = this.currencyMetaData[item].name;
-          r.push({
-            symbol: item,
-            price: result[name].eur
-          });
-        });
+    let serviceCall: Observable<any>;
 
-        return r;
-      })
-    ).subscribe((result) => {
+    switch(service) {
+      case 'coingecko':
+        serviceCall = this.loadPricesFromCoingecko(symbols);
+        break;
+      case 'coinbase':
+      default:
+        serviceCall = this.loadPricesFromCoinbase(symbols);
+        break;
+    }
+    serviceCall.subscribe((result) => {
       this.prices$.next(result);
       this.isLoading = false;
     });
-
 
   }
 

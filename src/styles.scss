@@ -109,8 +109,19 @@ table {
 }
 
 // Forms
-input, textarea {
-  @apply block px-3 py-2 border rounded text-sm;
+input, textarea, select {
+  @apply block px-3 py-2 border rounded text-sm
+    shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500;
+}
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right .5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
 }
 
 input:focus, textarea:focus {
@@ -128,6 +139,12 @@ button {
   &[disabled] {
     color: #ccc;
     background: #eee;
+  }
+
+  .mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
   }
 }
 

@@ -8,6 +8,15 @@
   </div>
 
   <div class="mb-2">
+    <label>Service:</label>
+    <select formControlName="service">
+      <option [ngValue]="null">...</option>
+      <option>Coinbase</option>
+      <option>CoinGecko</option>
+    </select>
+  </div>
+
+  <div class="mb-2">
     <label>Symbols:</label>
 <!--    <input type="text" formControlName="symbols"/>-->
 
