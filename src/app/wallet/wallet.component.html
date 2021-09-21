@@ -1,5 +1,4 @@
 
-
 <div *ngFor="let item of results" class="grid grid-flow-col auto-cols-fr gap-4 border-b p-4">
   <div>
     <mat-radio-button name="from" color="primary" [value]="item.currency" (click)="fromSelected.emit(item)"></mat-radio-button>

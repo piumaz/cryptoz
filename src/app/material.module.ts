@@ -21,7 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {MatOptionModule} from "@angular/material/core";
 import { MatBottomSheetModule} from '@angular/material/bottom-sheet';
 import { MatDatepickerModule} from '@angular/material/datepicker';
-
+import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {NgModule} from '@angular/core';
 
 @NgModule({
@@ -48,7 +48,8 @@ import {NgModule} from '@angular/core';
         MatSidenavModule,
         MatBottomSheetModule,
         MatDatepickerModule,
-        MatOptionModule
+        MatOptionModule,
+        MatSnackBarModule
     ],
     exports: [
         MatButtonModule,
@@ -73,7 +74,8 @@ import {NgModule} from '@angular/core';
         MatSidenavModule,
         MatBottomSheetModule,
         MatDatepickerModule,
-        MatOptionModule
+        MatOptionModule,
+        MatSnackBarModule
     ],
 })
 

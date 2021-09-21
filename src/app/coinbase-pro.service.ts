@@ -25,6 +25,10 @@ export class CoinbaseProService {
     return this.http.get(`${this.api}/fees`);
   }
 
+  getOrders() {
+    return this.http.get(`${this.api}/orders`);
+  }
+
   postOrders(params: any) {
     return this.http.post(`${this.api}/orders`, params);
   }
