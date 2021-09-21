@@ -1,0 +1,15 @@
+
+
+<div *ngFor="let item of results" class="grid grid-flow-col auto-cols-fr gap-4 border-b p-4">
+  <div>
+    <mat-radio-button name="from" color="primary" [value]="item.currency" (click)="fromSelected.emit(item)"></mat-radio-button>
+  </div>
+  <div>
+    <mat-radio-button name="to" color="accent" [value]="item.currency" (click)="toSelected.emit(item)"></mat-radio-button>
+  </div>
+  <div>
+    {{item.currency}}
+    <p *ngIf="!item.trading_enabled"><small>Not enable for trading</small></p>
+  </div>
+  <div>{{item.available}}</div>
+</div>

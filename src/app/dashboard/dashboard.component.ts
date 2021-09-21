@@ -1,10 +1,12 @@
-import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription} from "rxjs";
 import {filter, first, map, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
+import {CoinbaseProService} from "../coinbase-pro.service";
 
+declare const TradingView: any;
 
 export interface Currency {
   symbol: string;
@@ -17,6 +19,14 @@ export interface Currency {
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+
+  public accounts$: Observable<any> = this.coinbaseProService.getAccounts().pipe(
+    map((r: any) => {
+      return r.sort((a: any, b: any) => {
+        return b.available - a.available;
+      });
+    })
+  );
 
   public currencyMetaData: any = {
     BTC: {
@@ -45,7 +55,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     },
     SHIB: {
       name: 'shiba-inu'
+    },
+    FET: {
+      name: 'fet'
+    },
+    RLY: {
+      name: 'rly'
     }
+
   }
 
   public colorScheme = {
@@ -87,12 +104,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected destroy$ = new Subject();
 
-  constructor(private http: HttpClient,
-              private fb: FormBuilder) {
-  }
+  constructor(
+    private http: HttpClient,
+    private fb: FormBuilder,
+    private coinbaseProService: CoinbaseProService
+  ) {}
 
   ngOnInit(): void {
-
     const storage = this.getStorage();
     this.selectedSymbols = storage?.selectedSymbols || [];
     const minutes = storage?.minutes || 1;
@@ -109,6 +127,84 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  fees() {
+    this.coinbaseProService.getFees().subscribe((result) => {
+        console.log(result);
+      },
+      error => console.log(error.error.message));
+  }
+
+  sell() {
+    this.coinbaseProService.sellMarket('FET-USDT', {size: 5.1}).subscribe((result) => {
+        console.log(result);
+      },
+      error => console.log(error.error.message));
+  }
+
+  buy() {
+    this.coinbaseProService.buyMarket('SHIB-USDT', {funds: 0.5}).subscribe((result) => {
+        console.log(result);
+      },
+      error => console.log(error.error.message));
+  }
+
+  conversion() {
+    this.coinbaseProService.postConversions('USDT', 'BTC', 3).subscribe((result) => {
+        console.log(result);
+      },
+      error => console.log(error.error.message));
+  }
+
+  loadWidgets() {
+
+    const widget = `
+      <!-- TradingView Widget BEGIN -->
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <div class="tradingview-widget-copyright"><a href="https://in.tradingview.com/symbols/NASDAQ-AAPL/technicals/" rel="noopener" target="_blank"><span class="blue-text">Technical Analysis for AAPL</span></a> by TradingView</div>
+      </div>
+      <!-- TradingView Widget END -->
+      `;
+
+    setTimeout(() => {
+
+      const el = document.getElementById('technical-analysis');
+
+
+      if (el) {
+
+        this.getSymbols().forEach(symbol => {
+
+          console.log(symbol);
+          const elementWidget = document.createElement('div');
+          elementWidget.style.width = (100 / (this.getSymbols().length / 2)) + '%';
+          elementWidget.style.height = '340px';
+          elementWidget.innerHTML = widget;
+
+          const script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.async = true;
+          script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
+          script.innerHTML = `{
+            "interval": "1m",
+            "width": "100%",
+            "isTransparent": true,
+            "height": "100%",
+            "symbol": "COINBASE:${symbol}EUR",
+            "showIntervalTabs": true,
+            "locale": "in",
+            "colorTheme": "light"
+          }`;
+
+          elementWidget.getElementsByClassName('tradingview-widget-container')[0].appendChild(script);
+          el.appendChild(elementWidget);
+        });
+
+      }
+
+    }, 1000);
   }
 
   setStorage() {
@@ -203,6 +299,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.check();
+    // this.loadWidgets();
 
     const milliseconds = this.uiForm.value.minutes * 60 * 1000;
     this.uiForm.get('minutes')?.disable();
@@ -358,6 +455,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.history[symbol] ? this.history[symbol].reverse()[0] : null;
   }
 
+  loadPricesFromCoinbasePro(symbols: string[]): Observable<any> {
+
+    let observables: any = {};
+
+    symbols.forEach((symbol: string) => {
+      observables[symbol] = this.http.get(`http://localhost:3000/coinbase/products/${symbol}-EUR/ticker`).pipe(
+        map((result: any) => {
+          return {
+            symbol: symbol,
+            price: Number(result.price)
+          };
+        })
+      );
+    });
+
+
+    return forkJoin(observables).pipe(
+      takeUntil(this.destroy$),
+      map((result: any) => {
+
+        let rows: any[] = [];
+
+        const symbols = Object.keys(result);
+
+        symbols.forEach((symbol: string) => {
+          rows.push(result[symbol]);
+        });
+
+        return rows;
+      })
+    );
+
+  }
+
   loadPricesFromCoinbase(symbols: string[]): Observable<any> {
 
     let observables: any = {};
@@ -371,7 +502,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           };
         })
       );
-
     });
 
     return forkJoin(observables).pipe(
@@ -428,13 +558,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.isLoading = true;
-    const service = this.uiForm.get('minutes')?.value;
+    const service = this.uiForm.get('service')?.value.toLowerCase();
 
     let serviceCall: Observable<any>;
 
     switch(service) {
       case 'coingecko':
         serviceCall = this.loadPricesFromCoingecko(symbols);
+        break;
+      case 'coinbasepro':
+        serviceCall = this.loadPricesFromCoinbasePro(symbols);
         break;
       case 'coinbase':
       default:

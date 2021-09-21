@@ -12,6 +12,7 @@
     <select formControlName="service">
       <option [ngValue]="null">...</option>
       <option>Coinbase</option>
+      <option>CoinbasePro</option>
       <option>CoinGecko</option>
     </select>
   </div>
@@ -67,6 +68,15 @@
   </mat-chip>
 </div>
 
+<div>
+  <div><button (click)="fees()">Fee</button></div>
+  <div><button (click)="sell()">Vendi</button></div>
+  <div><button (click)="buy()">Compra</button></div>
+  <div><button (click)="conversion()">Converti</button></div>
+</div>
+
+<app-wallet [results]="accounts$ | async" class="block bg-white shadow overflow-hidden rounded-lg"></app-wallet>
+
 <div *ngIf="controlCheckSymbol.value">
   <h3>I suggest you...</h3>
   <ng-container *ngIf="!messages.length">
@@ -96,6 +106,10 @@
     [showXAxisLabel]="false"
     [showYAxisLabel]="false"
     [results]="chartData"></app-charts>
+</div>
+
+<div>
+  <div id="technical-analysis"></div>
 </div>
 
 <div *ngIf="historyRows.length" class="my-4">

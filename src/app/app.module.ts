@@ -10,13 +10,16 @@ import {ReactiveFormsModule} from "@angular/forms";
 import {NgxChartsModule} from "@swimlane/ngx-charts"
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
-import {MaterialModule} from "./material.module"
+import {MaterialModule} from "./material.module";
+import { WalletComponent } from './wallet/wallet.component'
+
 
 @NgModule({
   declarations: [
     AppComponent,
     DashboardComponent,
-    ChartsComponent
+    ChartsComponent,
+    WalletComponent
   ],
   imports: [
     BrowserModule,
