@@ -8,6 +8,10 @@
 /***********************/
 /****  BASE STYLES  ****/
 /***********************/
+:root {
+  --primary-color: #673ab7;
+  --accent-color: #ffd740;
+}
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

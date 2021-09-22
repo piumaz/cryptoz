@@ -15,12 +15,16 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 
-  public fromAccount: any;
-  public toAccount: any;
+  public productsGraphSelectd: string[] = [];
 
-  public products$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
-  public accounts$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
-  public orders$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  public currencies$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+  public products$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+  public accounts$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+  public orders$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+  public prices$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+
+  private intervalSub: Subscription = new Subscription();
+  private intervalMinutes = 0.1;
 
   protected destroy$ = new Subject();
 
@@ -32,17 +36,86 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadAccounts();
+    this.loadCurrencies();
     this.loadProducts();
+    this.loadAccounts();
     this.loadOrders();
 
-    this.orders$.subscribe();
-
+    this.intervalSub = interval(this.intervalMinutes * 60 * 1000).subscribe((x: number) => {
+      this.loadPrices();
+    });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.intervalSub.unsubscribe();
+  }
+
+  addProductsGraphSelected(productId: string) {
+    this.productsGraphSelectd.push(productId);
+  }
+
+  removeProductsGraphSelected(productId: string) {
+    this.productsGraphSelectd = this.productsGraphSelectd.filter(
+      (v: string) => v !== productId
+    );
+  }
+
+  getProductsGraphSelected() {
+    return this.productsGraphSelectd;
+  }
+
+  loadPrices() {
+
+    let observables: any = {};
+
+    // per tutti quelli nell'account con soldi
+    // più quelli che voglio osservare
+    const accountsWithMoney = this.accounts$.getValue().filter(
+      (item: any) => item.available > 0 && !['EUR','USDT'].includes(item.currency)
+    ).map(
+      (item: any) => item.currency + '-USDT'
+    );
+
+    const productsGraphSelected = this.getProductsGraphSelected();
+
+    const products = [...new Set([
+      ...accountsWithMoney,
+      ...productsGraphSelected
+    ])];
+
+    products.forEach((productId: string) => {
+      observables[productId] = this.coinbaseProService.getProductTicker(productId).pipe(
+        map((result: any) => {
+          return {
+            symbol: productId,
+            price: Number(result.price)
+          };
+        })
+      );
+    });
+
+
+    forkJoin(observables).pipe(
+      takeUntil(this.destroy$),
+      map((result: any) => {
+
+        let rows: any[] = [];
+
+        const symbols = Object.keys(result);
+
+        symbols.forEach((symbol: string) => {
+          rows.push(result[symbol]);
+        });
+
+        return rows;
+      })
+    ).subscribe(
+      result => this.prices$.next(result),
+      err => this.prices$.error(err)
+    );
+
   }
 
   loadAccounts() {
@@ -76,6 +149,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  loadCurrencies() {
+    this.coinbaseProService.getCurrencies().subscribe(
+      result => this.currencies$.next(result),
+      err => this.currencies$.error(err)
+    );
+  }
+
   fees() {
     this.coinbaseProService.getFees().subscribe((result) => {
         console.log(result);
@@ -83,12 +163,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       error => console.log(error.error.message));
   }
 
-  swap(sellCurrency: string, buyCurrency: string, size: number) {
+  swap($event: any) {
 
-    const sellProductId = sellCurrency + '-USDT';
-    const buyProductId = buyCurrency + '-USDT';
+    const sellProductId = $event.sellProductId;
+    const buyProductId = $event.buyProductId;
+    const sellSize = $event.sellSize;
 
-    this.coinbaseProService.sellMarket(sellProductId, {size: size}).pipe(
+    this.coinbaseProService.sellMarket(sellProductId, {size: sellSize}).pipe(
       tap((r) => {
         this.notify.open(sellProductId  + ' selled!');
         console.log(r);

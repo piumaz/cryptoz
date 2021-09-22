@@ -1,15 +1,20 @@
 
-<app-graph></app-graph>
-
-<div>
-  <button [disabled]="!fromAccount || !toAccount || fromAccount === toAccount"
-          (click)="swap(fromAccount.currency, toAccount.currency, fromAccount.available)">
-    SWAP {{fromAccount?.currency}} to {{toAccount?.currency}}
-  </button>
+<div class="mb-2">
+  <app-swap
+    [products]="products$ | async"
+    [accounts]="accounts$ | async"
+    (swap)="swap($event)"
+  ></app-swap>
 </div>
 
+<app-graph
+  [prices]="prices$ | async"
+  [products]="products$ | async"
+  [accounts]="accounts$ | async"
+  (productAdded)="addProductsGraphSelected($event)"
+  (productRemoved)="removeProductsGraphSelected($event)"></app-graph>
+
 <app-wallet
-  [results]="accounts$ | async"
-  (fromSelected)="fromAccount = $event"
-  (toSelected)="toAccount = $event"
+  [currencies]="currencies$ | async"
+  [accounts]="accounts$ | async"
   class="block bg-white shadow overflow-hidden rounded-lg"></app-wallet>

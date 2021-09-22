@@ -1,0 +1,31 @@
+
+<form [formGroup]="form" class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-end">
+  <div class="flex-grow">
+    <label>Sell:</label>
+    <select formControlName="sell" class="w-full">
+      <option [ngValue]="null">...</option>
+      <option *ngFor="let item of getProductsSell()">
+        {{item.id}}
+      </option>
+    </select>
+  </div>
+  <div class="flex-grow">
+    <label>Buy:</label>
+    <select formControlName="buy" class="w-full">
+      <option [ngValue]="null">...</option>
+      <option *ngFor="let item of getProductsBuy()">
+        {{item.id}}
+      </option>
+    </select>
+  </div>
+
+  <div>
+    <button
+      [disabled]="form.invalid"
+      (click)="confirm()">
+      <span>SWAP</span>
+    </button>
+  </div>
+</form>
+
+

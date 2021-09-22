@@ -12,7 +12,8 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 import {MaterialModule} from "./material.module";
 import { GraphComponent } from './graph/graph.component'
-import { WalletComponent } from './wallet/wallet.component'
+import { WalletComponent } from './wallet/wallet.component';
+import { SwapComponent } from './swap/swap.component'
 
 
 @NgModule({
@@ -21,7 +22,8 @@ import { WalletComponent } from './wallet/wallet.component'
     DashboardComponent,
     GraphComponent,
     ChartsComponent,
-    WalletComponent
+    WalletComponent,
+    SwapComponent
   ],
   imports: [
     BrowserModule,

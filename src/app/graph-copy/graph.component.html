@@ -1,21 +1,57 @@
 
 <form [formGroup]="uiForm" class="md:flex md:flex-row md:gap-6 items-end">
+
   <div class="mb-2">
-<!--    <label>Select Market:</label>-->
+    <label>Loop (minutes):</label>
+    <input type="number" formControlName="minutes"
+           step="0.1" min="0.1" max="5">
+  </div>
+
+  <div class="mb-2">
+    <label>Service:</label>
+    <select formControlName="service">
+      <option [ngValue]="null">...</option>
+      <option>Coinbase</option>
+      <option>CoinbasePro</option>
+    </select>
+  </div>
+
+  <div class="mb-2">
+    <label>Symbols:</label>
+<!--    <input type="text" formControlName="symbols"/>-->
+
     <mat-chip-list #symbolList>
       <input
-        placeholder="Search market..."
+        placeholder="Add symbol..."
         #symbolsInput
         type="text" formControlName="symbols"
         [matAutocomplete]="auto"
         [matChipInputFor]="symbolList">
     </mat-chip-list>
     <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedManagedSymbol($event)">
-      <mat-option *ngFor="let item of getFilteresManagedSymbols()" [value]="item.id">
+      <mat-option *ngFor="let item of getManagedSymbols()" [value]="item.id">
         {{item.id}}
       </mat-option>
     </mat-autocomplete>
 
+  </div>
+
+  <div class="mb-2">
+    <button (click)="start()" [disabled]="!getSelectedManagedSymbols().length" *ngIf="!isStarted">
+        <mat-icon>play_circle</mat-icon> <span>START</span>
+    </button>
+
+    <button (click)="stop()" *ngIf="isStarted">
+      <mat-icon>stop_circle</mat-icon>
+      <span style="display: flex; flex-direction: row; align-items: center;">
+        STOP
+        <mat-spinner *ngIf="isLoading" [diameter]="13" class="ml-2"></mat-spinner>
+      </span>
+    </button>
+
+    <button (click)="clear()" class="ml-2">
+      <mat-icon>remove_circle_outline</mat-icon> <span>CLEAR</span>
+    </button>
   </div>
 
 </form>
@@ -32,9 +68,20 @@
 </div>
 
 
-<div class="my-4">
+<div *ngIf="controlCheckSymbol.value">
+  <h3>I suggest you...</h3>
+  <ng-container *ngIf="!messages.length">
+    nothing to say for now!
+  </ng-container>
+  <div *ngFor="let item of messages" class="alert">
+    <small>{{item.date | date: 'short'}}</small><br/>
+    {{item.message}}
+  </div>
+</div>
+
+<div *ngIf="historyRows.length" class="my-4">
   <p>
-    From {{startedAt | date : 'short'}}
+    From {{startedAt | date : 'short'}}, {{historyRows.length}} rows
   </p>
 </div>
 
@@ -50,6 +97,10 @@
     [showXAxisLabel]="false"
     [showYAxisLabel]="false"
     [results]="chartData"></app-charts>
+</div>
+
+<div>
+  <div id="technical-analysis"></div>
 </div>
 
 <div *ngIf="historyRows.length" class="my-4">
@@ -73,7 +124,7 @@
     </thead>
 
     <tbody class="bg-white divide-y divide-gray-200">
-      <tr *ngFor="let item of historyRows | slice:0:10; let i = index">
+      <tr *ngFor="let item of historyRows; let i = index">
         <td *ngFor="let currency of getSymbols()" class="px-6 py-4 whitespace-nowrap text-right"
             [style.color]="getPriceColor(item[currency], historyRows[i+1]? historyRows[i+1][currency] : item[currency])">
 

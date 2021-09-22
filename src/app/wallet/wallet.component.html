@@ -1,14 +1,15 @@
 
-<div *ngFor="let item of results" class="grid grid-flow-col auto-cols-fr gap-4 border-b p-4">
+<div *ngFor="let item of accounts" class="grid grid-flow-col auto-cols-fr items-center gap-4 border-b p-4">
   <div>
-    <mat-radio-button name="from" color="primary" [value]="item.currency" (click)="fromSelected.emit(item)"></mat-radio-button>
+    <img
+      style="width:32px; height:32px;"
+      src="assets/crypto/color/{{item.currency | lowercase}}.svg"
+      onerror="this.src='assets/crypto/white/generic.svg'">
   </div>
   <div>
-    <mat-radio-button name="to" color="accent" [value]="item.currency" (click)="toSelected.emit(item)"></mat-radio-button>
-  </div>
-  <div>
-    {{item.currency}}
-    <p *ngIf="!item.trading_enabled"><small>Not enable for trading</small></p>
+    <strong>{{item.currency}}</strong>
+    <div>{{getCurrencyName(item.currency)}}</div>
+    <div *ngIf="!item.trading_enabled"><small>Not enable for trading</small></div>
   </div>
   <div>{{item.available}}</div>
 </div>

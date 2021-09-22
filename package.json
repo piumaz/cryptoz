@@ -21,6 +21,7 @@
     "@angular/platform-browser-dynamic": "~12.2.0",
     "@angular/router": "~12.2.0",
     "@swimlane/ngx-charts": "^19.0.1",
+    "cryptocurrency-icons": "^0.18.0",
     "rxjs": "~6.6.0",
     "tslib": "^2.3.0",
     "typescript-tradingview-embed": "^1.0.0",
