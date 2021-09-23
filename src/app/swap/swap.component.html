@@ -1,31 +1,48 @@
 
-<form [formGroup]="form" class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-end">
-  <div class="flex-grow">
-    <label>Sell:</label>
-    <select formControlName="sell" class="w-full">
-      <option [ngValue]="null">...</option>
-      <option *ngFor="let item of getProductsSell()" [ngValue]="item">
-        {{item.id}}
-      </option>
-    </select>
-  </div>
-  <div class="flex-grow">
-    <label>Buy:</label>
-    <select formControlName="buy" class="w-full">
-      <option [ngValue]="null">...</option>
-      <option *ngFor="let item of getProductsBuy()" [ngValue]="item">
-        {{item.id}}
-      </option>
-    </select>
+<form [formGroup]="form">
+  <div>
+    <mat-radio-group formControlName="type" class="flex flex-row gap-4">
+      <mat-radio-button value="swap">Swap</mat-radio-button>
+      <mat-radio-button value="sell">Sell</mat-radio-button>
+      <mat-radio-button value="buy">Buy</mat-radio-button>
+    </mat-radio-group>
   </div>
 
-  <div>
-    <button
-      [disabled]="form.invalid"
-      (click)="confirm()">
-      <span>SWAP</span>
-    </button>
+  <div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-end">
+    <div *ngIf="form.controls.type.value !== 'buy'" class="flex-grow">
+      <label>Sell:</label>
+      <select formControlName="sell" class="w-full">
+        <option [ngValue]="null">...</option>
+        <option *ngFor="let item of getProductsSell()" [ngValue]="item">
+          {{item.id}}
+        </option>
+      </select>
+    </div>
+    <div *ngIf="form.controls.type.value !== 'sell'" class="flex-grow">
+      <label>Buy:</label>
+      <select formControlName="buy" class="w-full">
+        <option [ngValue]="null">...</option>
+        <option *ngFor="let item of getProductsBuy()" [ngValue]="item">
+          {{item.id}}
+        </option>
+      </select>
+    </div>
+    <div class="flex-shrink">
+      <label><span *ngIf="form.controls.type.value === 'swap'">{{form.controls.sell.value?.base_currency}} </span>Size:</label>
+      <input type="text" formControlName="size" class="w-full">
+    </div>
+
+    <div>
+      <button mat-flat-button color="primary"
+        [disabled]="form.invalid"
+        (click)="confirm()">
+        <span *ngIf="form.controls.type.value === 'swap'">SWAP</span>
+        <span *ngIf="form.controls.type.value === 'sell'">SELL</span>
+        <span *ngIf="form.controls.type.value === 'buy'">BUY</span>
+      </button>
+    </div>
   </div>
+
 </form>
 
 

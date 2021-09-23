@@ -170,9 +170,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const sellProductId = $event.sellProductId;
     const buyProductId = $event.buyProductId;
-    const sellSize = $event.sellSize;
+    const size = $event.size;
 
-    this.coinbaseProService.sellMarket(sellProductId, {size: sellSize}).pipe(
+    this.coinbaseProService.sellMarket(sellProductId, {size: size}).pipe(
       tap((r) => {
         this.notify.open(sellProductId  + ' selled!');
         console.log(r);
@@ -204,4 +204,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   }
 
+  sell($event: any) {
+
+    const sellProductId = $event.sellProductId;
+    const size = $event.size;
+
+    this.coinbaseProService.sellMarket(sellProductId, {size: size}).subscribe(
+      (r) => {
+        this.notify.open(sellProductId  + ' selled!');
+        this.loadAccounts();
+      },
+      error => {
+        console.log(error.error.message);
+        this.notify.open('Sell error: ' + error.error.message);
+      });
+
+  }
+
+  buy($event: any) {
+
+    const buyProductId = $event.buyProductId;
+    const size = $event.size;
+
+    this.coinbaseProService.buyMarket(buyProductId, {size: size}).subscribe(
+      (result) => {
+        this.notify.open(buyProductId  + ' buyed!');
+        this.loadAccounts();
+      },
+      error => {
+        console.log(error.error.message);
+        this.notify.open('Buy error: ' + error.error.message);
+      });
+  }
 }

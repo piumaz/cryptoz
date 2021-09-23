@@ -5,11 +5,13 @@
   </p>
 </div>
 
-<div class="my-2 border-b py-2">
-  <app-swap
+<div>
+  <app-swap class="block p-2 mb-4 bg-gray-50 shadow overflow-hidden rounded-lg"
     [products]="products$ | async"
     [accounts]="accounts$ | async"
     (swap)="swap($event)"
+    (sell)="sell($event)"
+    (buy)="buy($event)"
   ></app-swap>
 </div>
 
