@@ -4,7 +4,7 @@
     <label>Sell:</label>
     <select formControlName="sell" class="w-full">
       <option [ngValue]="null">...</option>
-      <option *ngFor="let item of getProductsSell()">
+      <option *ngFor="let item of getProductsSell()" [ngValue]="item">
         {{item.id}}
       </option>
     </select>
@@ -13,7 +13,7 @@
     <label>Buy:</label>
     <select formControlName="buy" class="w-full">
       <option [ngValue]="null">...</option>
-      <option *ngFor="let item of getProductsBuy()">
+      <option *ngFor="let item of getProductsBuy()" [ngValue]="item">
         {{item.id}}
       </option>
     </select>

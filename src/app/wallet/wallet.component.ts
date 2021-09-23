@@ -7,12 +7,18 @@ import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 })
 export class WalletComponent implements OnInit {
 
-  @Input() accounts: any;
+  @Input() accounts: any[] = [];
   @Input() currencies: any[] = [];
 
   constructor() { }
 
   ngOnInit(): void {
+  }
+
+  getAccounts() {
+    return this.accounts.filter(
+      (item: any) => item.available > 0 || ['USDT','EUR'].includes(item.currency)
+    );
   }
 
   getCurrencyName(symbol: string) {

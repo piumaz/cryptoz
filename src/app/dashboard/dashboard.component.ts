@@ -28,6 +28,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected destroy$ = new Subject();
 
+  startedAt: number = new Date().valueOf();
+
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
@@ -36,6 +38,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+
     this.loadCurrencies();
     this.loadProducts();
     this.loadAccounts();
@@ -70,7 +73,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     let observables: any = {};
 
-    // per tutti quelli nell'account con soldi
+    // per tutti gli account con soldi
     // più quelli che voglio osservare
     const accountsWithMoney = this.accounts$.getValue().filter(
       (item: any) => item.available > 0 && !['EUR','USDT'].includes(item.currency)

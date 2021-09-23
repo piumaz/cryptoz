@@ -23,8 +23,7 @@ export class SwapComponent implements OnInit {
   ngOnInit(): void {
     this.form = this.fb.group({
       sell: [null, Validators.required],
-      buy: [null, Validators.required],
-      sellSize: [null, Validators.required],
+      buy: [null, Validators.required]
     });
   }
 
@@ -39,7 +38,7 @@ export class SwapComponent implements OnInit {
   getProductsSell() {
     const currencies = this.getAccountsCurrencyAvailable();
     return this.products.filter(
-      (item) => currencies.includes(item.base_currency) && ['USDC','EUR'].includes(item.quote_currency)
+      (item) => currencies.includes(item.base_currency) && ['USDT','EUR'].includes(item.quote_currency)
     ).sort(
       (a: any, b: any) => a.id.localeCompare(b.id)
     );
@@ -47,7 +46,7 @@ export class SwapComponent implements OnInit {
 
   getProductsBuy() {
     return this.products.filter(
-      (item) => ['USDC','EUR'].includes(item.quote_currency)
+      (item) => ['USDT','EUR'].includes(item.quote_currency)
     ).sort(
       (a: any, b: any) => a.id.localeCompare(b.id)
     );
@@ -70,6 +69,10 @@ export class SwapComponent implements OnInit {
       return;
     }
 
-    this.swap.emit(this.form.value);
+    this.swap.emit({
+      sellProductId: this.form.value.sell.id,
+      buyProductId: this.form.value.buy.id,
+      sellSize: this.form.value.sell.available
+    });
   }
 }

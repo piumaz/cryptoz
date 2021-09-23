@@ -63,8 +63,6 @@ export class GraphComponent implements OnInit, OnDestroy {
   public uiForm: FormGroup = new FormGroup({});
   public controlCheckSymbol: FormControl = new FormControl(null);
 
-  startedAt: number = 0;
-
   average: any = {};
   rate: any = {};
 
@@ -222,7 +220,7 @@ export class GraphComponent implements OnInit, OnDestroy {
 
   getManagedSymbols(): any[] {
     return this.products.filter(
-      (item) => ['USDC','EUR'].includes(item.quote_currency)
+      (item) => ['USDT','EUR'].includes(item.quote_currency)
     ).sort(
       (a: any, b: any) => a.id.localeCompare(b.id)
     );
