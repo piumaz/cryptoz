@@ -17,6 +17,12 @@
           {{item.id}}
         </option>
       </select>
+      <p>
+        <small *ngIf="form.controls.sell.value as productSell">
+          <strong>{{productSell.base_currency}}</strong>
+          Min: {{productSell.base_min_size}} - Increment: {{productSell.base_increment}}
+        </small>
+      </p>
     </div>
     <div *ngIf="form.controls.type.value !== 'sell'" class="flex-grow">
       <label>Buy:</label>
@@ -26,10 +32,32 @@
           {{item.id}}
         </option>
       </select>
+      <p>
+        <small *ngIf="form.controls.buy.value as productBuy">
+          <strong>{{productBuy.base_currency}}</strong>
+          Min: {{productBuy.base_min_size}} - Increment: {{productBuy.base_increment}}
+        </small>
+      </p>
     </div>
+
     <div class="flex-shrink">
-      <label><span *ngIf="form.controls.type.value === 'swap'">{{form.controls.sell.value?.base_currency}} </span>Size:</label>
+      <label>Size:</label>
       <input type="text" formControlName="size" class="w-full">
+      <p>
+        <ng-container *ngIf="form.controls.type.value !== 'buy'">
+          <small *ngIf="form.controls.sell.value as productSell">
+            <strong>{{productSell.base_currency}}</strong>
+            Available: {{getAccountAvailable(productSell.base_currency)}}
+          </small>
+        </ng-container>
+
+        <ng-container *ngIf="form.controls.type.value === 'buy'">
+          <small *ngIf="form.controls.buy.value as productBuy">
+            <strong>{{productBuy.base_currency}}</strong>
+            Available: {{getAccountAvailable(productBuy.base_currency)}}
+          </small>
+        </ng-container>
+      </p>
     </div>
 
     <div>
@@ -40,6 +68,7 @@
         <span *ngIf="form.controls.type.value === 'sell'">SELL</span>
         <span *ngIf="form.controls.type.value === 'buy'">BUY</span>
       </button>
+      <p></p>
     </div>
   </div>
 

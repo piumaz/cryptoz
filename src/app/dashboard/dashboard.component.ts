@@ -1,11 +1,12 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription} from "rxjs";
-import {filter, first, map, mergeMap, takeUntil, tap} from "rxjs/operators";
+import {filter, map, mergeMap, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 import {CoinbaseProService} from "../coinbase-pro.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {WebsocketService} from "../websocket.service";
 
 
 @Component({
@@ -22,6 +23,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public accounts$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public orders$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public prices$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+  public ticker$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   private intervalSub: Subscription = new Subscription();
   private intervalMinutes = 0.1;
@@ -34,6 +36,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private fb: FormBuilder,
     private coinbaseProService: CoinbaseProService,
+    private wsService: WebsocketService,
     private notify: MatSnackBar
   ) {}
 
@@ -44,9 +47,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadAccounts();
     this.loadOrders();
 
-    this.intervalSub = interval(this.intervalMinutes * 60 * 1000).subscribe((x: number) => {
+    this.loadTickers();
+/*    this.intervalSub = interval(this.intervalMinutes * 60 * 1000).subscribe((x: number) => {
       this.loadPrices();
-    });
+    });*/
   }
 
   ngOnDestroy(): void {
@@ -57,16 +61,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   addProductsGraphSelected(productId: string) {
     this.productsGraphSelectd.push(productId);
+    this.subscribeWsTickers([productId]);
   }
 
   removeProductsGraphSelected(productId: string) {
     this.productsGraphSelectd = this.productsGraphSelectd.filter(
       (v: string) => v !== productId
     );
+    this.unsubscribeWsTickers([productId]);
   }
 
   getProductsGraphSelected() {
     return this.productsGraphSelectd;
+  }
+
+  subscribeWsTickers(productIds: string[]) {
+    this.wsService.send({
+      "type": "subscribe",
+      "product_ids": productIds,
+      "channels": [
+        "ticker"
+      ]
+    });
+  }
+
+  unsubscribeWsTickers(productIds: string[]) {
+    this.wsService.send({
+      "type": "unsubscribe",
+      "product_ids": productIds,
+      "channels": [
+        "ticker"
+      ]
+    });
+  }
+
+  loadTickers() {
+    this.wsService.connect();
+    this.wsService.wsSubject$.subscribe(
+      (v: any) => {
+        if (v.type === 'ticker') {
+          this.ticker$.next(v);
+        }
+      }
+    );
   }
 
   loadPrices() {
@@ -135,11 +172,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadOrders() {
-    this.coinbaseProService.getOrders().pipe(
-      tap((r: any) => {
-        console.log('orders', r);
-      })
-    ).subscribe(
+    this.coinbaseProService.getOrders().subscribe(
       result => this.orders$.next(result),
       err => this.orders$.error(err)
     );
@@ -166,29 +199,81 @@ export class DashboardComponent implements OnInit, OnDestroy {
       error => console.log(error.error.message));
   }
 
+  isUSDT(product: any) {
+    return product.quote_currency === 'USDT';
+  }
+
+  isEUR(product: any) {
+    return product.quote_currency === 'EUR';
+  }
+
+  extractCurrency(productId: string) {
+    return productId.split('-')[1];
+  }
+
+  getAccountAvailableSize(currency: string) {
+    const accounts = this.accounts$.getValue().filter(
+      (item: any) => item.currency === currency
+    ).map(
+      (item: any) => item.available
+    );
+
+    return accounts.length ? accounts[0] : null;
+  }
+
+  isRightSize(product: any, size: number) {
+    return size > product.base_min_size && size < product.base_max_size;
+  }
+  isRightFunds(product: any, funds: number) {
+    return funds > product.min_market_funds && funds < product.max_market_funds;
+  }
+
+  isRightIncrementSize(product: any, size: number) {
+    return Math.round(size / product.base_increment) / (1 / product.base_increment) === size;
+  }
+  isRightIncrementFunds(product: any, funds: number) {
+    return Math.round(funds / product.quote_increment) / (1 / product.quote_increment) === funds;
+  }
+
+  getSizeIncrement(product: any, size: number) {
+    return Math.round(size / product.base_increment) / (1 / product.base_increment);
+  }
+  getFundsIncrement(product: any, funds: number) {
+    return Math.round(funds / product.base_increment) / (1 / product.base_increment);
+  }
+
   swap($event: any) {
 
-    const sellProductId = $event.sellProductId;
-    const buyProductId = $event.buyProductId;
-    const size = $event.size;
+    const sellProduct = $event.sellProduct;
+    const buyProduct = $event.sellProduct;
+    const sellSize = $event.size;
 
-    this.coinbaseProService.sellMarket(sellProductId, {size: size}).pipe(
+    const sellCurrency = sellProduct.quote_currency;
+    const accountPrevAvailable = this.getAccountAvailableSize(sellCurrency);
+
+    this.coinbaseProService.sellMarket(sellProduct.id, {size: sellSize}).pipe(
       tap((r) => {
-        this.notify.open(sellProductId  + ' selled!');
+        this.notify.open(sellProduct.id  + ' selled!');
         console.log(r);
       }),
       mergeMap((r) => {
         return this.coinbaseProService.getAccounts().pipe(
-          filter((r: any) => r.currency === 'USDT'),
-          map((r: any[]) => r[0].available)
+          map((accounts: any[]) => {
+            return accounts.filter(
+              (r: any) => r.currency === sellCurrency
+            )[0];
+          })
         );
       })
     ).subscribe(
-      (USDTsize) => {
+      (accountAvailable) => {
 
-        this.coinbaseProService.buyMarket(buyProductId, {size: USDTsize}).subscribe(
+        let funds = accountAvailable - accountPrevAvailable;
+        funds = this.getFundsIncrement(buyProduct, funds);
+
+        this.coinbaseProService.buyMarket(buyProduct.id, {funds: funds}).subscribe(
           (result) => {
-            this.notify.open(buyProductId  + ' buyed!');
+            this.notify.open(buyProduct.id  + ' buyed!');
             this.loadAccounts();
           },
           error => {
@@ -206,7 +291,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   sell($event: any) {
 
-    const sellProductId = $event.sellProductId;
+    const sellProductId = $event.sellProduct.id;
     const size = $event.size;
 
     this.coinbaseProService.sellMarket(sellProductId, {size: size}).subscribe(
@@ -223,7 +308,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   buy($event: any) {
 
-    const buyProductId = $event.buyProductId;
+    const buyProductId = $event.buyProduct.id;
     const size = $event.size;
 
     this.coinbaseProService.buyMarket(buyProductId, {size: size}).subscribe(

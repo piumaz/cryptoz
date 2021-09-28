@@ -5,7 +5,7 @@ import {map} from "rxjs/operators";
 @Component({
   selector: 'app-swap',
   templateUrl: './swap.component.html',
-  styleUrls: ['./swap.component.css']
+  styleUrls: ['./swap.component.scss']
 })
 export class SwapComponent implements OnInit {
 
@@ -30,6 +30,7 @@ export class SwapComponent implements OnInit {
       size: [null, Validators.required],
     });
 
+    // type
     this.form.controls.type.valueChanges.subscribe((value) => {
 
       this.form.controls.sell.clearValidators();
@@ -53,6 +54,7 @@ export class SwapComponent implements OnInit {
       this.form.controls.buy.updateValueAndValidity();
     });
 
+    // sell
     this.form.controls.sell.valueChanges.subscribe((value) => {
       if (this.form.controls.type.value !== 'buy') {
         const size = this.getAccountAvailable(value?.base_currency);
@@ -116,20 +118,20 @@ export class SwapComponent implements OnInit {
     switch (this.form.controls.type.value) {
       case 'swap':
         this.swap.emit({
-          sellProductId: this.form.value.sell.id,
-          buyProductId: this.form.value.buy.id,
+          sellProduct: this.form.value.sell,
+          buyProduct: this.form.value.buy,
           size: this.form.value.size
         });
         break;
       case 'sell':
         this.sell.emit({
-          sellProductId: this.form.value.sell.id,
+          sellProduct: this.form.value.sell,
           size: this.form.value.size
         });
         break;
       case 'buy':
         this.buy.emit({
-          buyProductId: this.form.value.buy.id,
+          buyProduct: this.form.value.buy,
           size: this.form.value.size
         });
         break;

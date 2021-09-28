@@ -8,7 +8,7 @@
         #symbolsInput
         type="text" formControlName="symbols"
         [matAutocomplete]="auto"
-        [matChipInputFor]="symbolList">
+        [matChipInputFor]= "symbolList">
     </mat-chip-list>
     <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectedManagedSymbol($event)">
       <mat-option *ngFor="let item of getFilteresManagedSymbols()" [value]="item.id">
@@ -37,22 +37,22 @@
     legendPosition="right"
     [legend]="false"
     [scheme]="colorScheme"
-    [showGridLines]="false"
+    [showGridLines]="true"
     [xAxis]="false"
-    [yAxis]="false"
+    [yAxis]="true"
     [showXAxisLabel]="false"
     [showYAxisLabel]="false"
+    [timeline]="false"
     [results]="chartData"></app-charts>
 </div>
 
-<div *ngIf="historyRows.length" class="my-4">
+<div *ngIf="history.length" class="my-4">
 
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50">
       <tr>
-        <th *ngFor="let currency of getSymbols(); let i = index" class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+        <th *ngFor="let currency of getProductsId(); let i = index" class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
           <div [style.color]="colorScheme.domain[i]"><strong>{{currency}}</strong></div>
-          <input type="radio" value="{{currency}}" [formControl]="controlCheckSymbol" class="inline-block">
           <div class="text-xs">
             <!--Average:-->
             {{average[currency]}}<br/>
@@ -66,17 +66,19 @@
     </thead>
 
     <tbody class="bg-white divide-y divide-gray-200">
-      <tr *ngFor="let item of historyRows | slice:0:10; let i = index">
-        <td *ngFor="let currency of getSymbols()" class="px-6 py-4 whitespace-nowrap text-right"
-            [style.color]="getPriceColor(item[currency], historyRows[i+1]? historyRows[i+1][currency] : item[currency])">
+      <tr *ngFor="let item of history.slice(0, 10); let i = index">
+        <td *ngFor="let currency of getProductsId()" class="px-6 py-4 whitespace-nowrap text-right">
 
-          <span class="price">
-          <ng-container [ngSwitch]="getPriceColor(item[currency], historyRows[i+1]? historyRows[i+1][currency] : item[currency])">
-            <mat-icon *ngSwitchCase="'red'">arrow_downward</mat-icon>
-            <mat-icon *ngSwitchCase="'green'">arrow_upward</mat-icon>
-          </ng-container>
-          <span>{{item[currency]}}</span>
+          <ng-container *ngIf="item[currency] && item[currency].price">
+            <span class="price" [style.color]="getPriceColor(item[currency].price, history[i+1] && history[i+1][currency] ? history[i+1][currency].price : item[currency].price)">
+              <ng-container [ngSwitch]="getPriceColor(item[currency].price, history[i+1] && history[i+1][currency]? history[i+1][currency].price : item[currency].price)">
+                <mat-icon *ngSwitchCase="'red'">arrow_downward</mat-icon>
+                <mat-icon *ngSwitchCase="'green'">arrow_upward</mat-icon>
+              </ng-container>
+              <span>{{item[currency].price}}</span>
             </span>
+          </ng-container>
+
         </td>
       </tr>
     </tbody>

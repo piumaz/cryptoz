@@ -15,15 +15,26 @@
   ></app-swap>
 </div>
 
+<mat-tab-group dynamicHeight>
 
-<app-graph
-  [prices]="prices$ | async"
-  [products]="products$ | async"
-  [accounts]="accounts$ | async"
-  (productAdded)="addProductsGraphSelected($event)"
-  (productRemoved)="removeProductsGraphSelected($event)"></app-graph>
+  <mat-tab label="Graph">
+    <app-graph
+      [ticker]="ticker$ | async"
+      [products]="products$ | async"
+      [accounts]="accounts$ | async"
+      (productAdded)="addProductsGraphSelected($event)"
+      (productRemoved)="removeProductsGraphSelected($event)"
+      class="block mt-2"></app-graph>
+  </mat-tab>
 
-<app-wallet
-  [currencies]="currencies$ | async"
-  [accounts]="accounts$ | async"
-  class="block bg-white shadow overflow-hidden rounded-lg"></app-wallet>
+  <mat-tab label="Wallet">
+    <app-wallet
+      [currencies]="currencies$ | async"
+      [accounts]="accounts$ | async"
+      class="block mt-2 bg-white shadow overflow-hidden rounded-lg"></app-wallet>
+  </mat-tab>
+
+</mat-tab-group>
+
+
+

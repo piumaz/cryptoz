@@ -82,7 +82,7 @@ export class CoinbaseProService {
   }
 
   getAccounts() {
-    return this.http.get(`${this.api}/accounts`);
+    return this.http.get<any[]>(`${this.api}/accounts`);
   }
 
   getCurrencies() {

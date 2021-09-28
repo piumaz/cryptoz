@@ -35,6 +35,7 @@ export class ChartsComponent implements OnInit, OnDestroy {
   @Input() showYAxisLabel: boolean = true;
   @Input() xAxisLabel: string = 'xAxisLabel';
   @Input() yAxisLabel: string = 'yAxisLabel';
+  @Input() timeline: boolean = false;
 
   @Output() select: EventEmitter<any> = new EventEmitter();
   @Output() activate: EventEmitter<any> = new EventEmitter();
