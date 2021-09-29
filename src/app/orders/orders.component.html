@@ -1,0 +1,63 @@
+
+<h3>Open</h3>
+<table class="min-w-full divide-y divide-gray-200">
+  <thead class="bg-gray-50">
+  <tr>
+    <th>Side</th>
+    <th>Market</th>
+    <th>Size</th>
+    <th>Filled</th>
+    <th>Filled Price</th>
+    <th>Fee</th>
+    <th>Date</th>
+  </tr>
+  </thead>
+
+  <tbody class="bg-white divide-y divide-gray-200">
+  <tr *ngFor="let item of orders">
+    <td>{{item.side}}</td>
+  </tr>
+  </tbody>
+</table>
+
+<hr>
+
+<h3>Filled</h3>
+<div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-start">
+  <div class="flex-grow">
+    <label>Product:</label>
+    <select [formControl]="product" class="w-full">
+      <option [ngValue]="null">...</option>
+      <option *ngFor="let item of products" [ngValue]="item">
+        {{item.id}}
+      </option>
+    </select>
+  </div>
+</div>
+
+<table class="min-w-full divide-y divide-gray-200">
+  <thead class="bg-gray-50">
+  <tr>
+    <th>Side</th>
+    <th>Market</th>
+    <th>Size</th>
+    <th>Filled</th>
+    <th>Filled Price</th>
+    <th>Fee</th>
+    <th>Date</th>
+  </tr>
+  </thead>
+
+  <tbody class="bg-white divide-y divide-gray-200">
+  <tr *ngFor="let item of fills">
+    <td>{{item.side}}</td>
+    <td>{{item.product_id}}</td>
+    <td>{{item.size}}</td>
+    <td>{{item?.usd_volume | currency : 'USD'}}</td>
+    <td>{{item.price}}</td>
+    <td>{{item.fee}}</td>
+    <td>{{item.created_at | date : 'short'}}</td>
+  </tr>
+  </tbody>
+</table>
+

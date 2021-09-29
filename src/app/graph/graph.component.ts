@@ -120,7 +120,13 @@ export class GraphComponent implements OnInit, OnDestroy {
       this.tickers[productId] = [];
     }
     this.tickers[productId].unshift(ticker);
-    this.tickers[productId].splice(10, this.tickers[productId].length-2);
+
+    const limit = 10;
+    if (this.tickers[productId][limit]) {
+      const first = this.tickers[productId].pop();
+      this.tickers[productId].splice(limit, this.tickers[productId].length-2, first);
+    }
+
   }
 
   mergeTickers() {
@@ -132,7 +138,12 @@ export class GraphComponent implements OnInit, OnDestroy {
       });
 
       this.history.unshift(item);
-      this.history.splice(300, this.history.length-2);
+
+      const limit = 300;
+      if (this.history[limit]) {
+        const first = this.history.pop();
+        this.history.splice(limit, this.history.length-2, first);
+      }
     }
 
     this.buildChartData();
@@ -157,17 +168,22 @@ export class GraphComponent implements OnInit, OnDestroy {
       };
 
       const rows = [...this.history].reverse();
+      let firstTicker = rows[0][symbol];
+      // console.log('symbol', symbol);
       rows.forEach((item: any, i: number) => {
+
         if(!item[symbol]) {
           item[symbol] = this.tickers[symbol][0];
+          firstTicker = item[symbol];
         }
 
         const ticker = item[symbol];
-        const prevTicker = rows[0] && rows[0][symbol] ? rows[0][symbol] : ticker;
+        // console.log('first', firstTicker);
+        // console.log('ticker', ticker);
 
         const itemSeries = {
           name: i,
-          value: this.diff(ticker.price, prevTicker.price),
+          value: this.diff(ticker.price, firstTicker.price),
           price: ticker.price
         };
 

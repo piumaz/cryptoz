@@ -22,6 +22,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public products$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public accounts$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public orders$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+  public fills$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public prices$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public ticker$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
@@ -180,8 +181,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  loadFills(product: any) {
+    this.coinbaseProService.getFills({product_id: product.id}).subscribe(
+      result => this.fills$.next(result),
+      err => this.fills$.error(err)
+    );
+  }
+
   loadProducts() {
-    this.coinbaseProService.getProducts().subscribe(
+    this.coinbaseProService.getProducts().pipe(
+      map((results: any) => {
+        return results.filter(
+          (item: any) => ['USDT','EUR'].includes(item.quote_currency)
+        ).sort(
+          (a: any, b: any) => a.id.localeCompare(b.id)
+        );
+      })
+    ).subscribe(
       result => this.products$.next(result),
       err => this.products$.error(err)
     );

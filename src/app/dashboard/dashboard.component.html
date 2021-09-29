@@ -34,6 +34,15 @@
       class="block mt-2 bg-white shadow overflow-hidden rounded-lg"></app-wallet>
   </mat-tab>
 
+  <mat-tab label="Orders">
+    <app-orders
+      [orders]="orders$ | async"
+      [fills]="fills$ | async"
+      [products]="products$ | async"
+      (productSelected)="loadFills($event)"
+      class="block mt-2 bg-white shadow overflow-hidden rounded-lg"></app-orders>
+  </mat-tab>
+
 </mat-tab-group>
 
 

@@ -13,7 +13,8 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {MaterialModule} from "./material.module";
 import { GraphComponent } from './graph/graph.component'
 import { WalletComponent } from './wallet/wallet.component';
-import { SwapComponent } from './swap/swap.component'
+import { SwapComponent } from './swap/swap.component';
+import { OrdersComponent } from './orders/orders.component'
 
 
 @NgModule({
@@ -23,7 +24,8 @@ import { SwapComponent } from './swap/swap.component'
     GraphComponent,
     ChartsComponent,
     WalletComponent,
-    SwapComponent
+    SwapComponent,
+    OrdersComponent
   ],
   imports: [
     BrowserModule,

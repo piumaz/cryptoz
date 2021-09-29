@@ -25,6 +25,10 @@ export class CoinbaseProService {
     return this.http.get(`${this.api}/fees`);
   }
 
+  getFills(params: any) {
+    return this.http.get(`${this.api}/fills`, {params: params});
+  }
+
   getOrders() {
     return this.http.get(`${this.api}/orders`);
   }
