@@ -39,6 +39,9 @@ export class SwapComponent implements OnInit {
       if (value === 'buy') {
         this.form.controls.buy.setValidators(Validators.required);
         this.form.controls.size.patchValue(null);
+
+        const funds = this.getAccountAvailable(this.form.controls.buy.value?.quote_currency);
+        this.form.controls.size.patchValue(funds);
       }
       if (value === 'sell' || value === 'swap') {
         this.form.controls.sell.setValidators(Validators.required);
@@ -59,6 +62,14 @@ export class SwapComponent implements OnInit {
       if (this.form.controls.type.value !== 'buy') {
         const size = this.getAccountAvailable(value?.base_currency);
         this.form.controls.size.patchValue(size);
+      }
+    });
+
+    // buy
+    this.form.controls.buy.valueChanges.subscribe((value) => {
+      if (this.form.controls.type.value === 'buy') {
+        const funds = this.getAccountAvailable(value?.quote_currency);
+        this.form.controls.size.patchValue(funds);
       }
     });
   }
@@ -132,7 +143,7 @@ export class SwapComponent implements OnInit {
       case 'buy':
         this.buy.emit({
           buyProduct: this.form.value.buy,
-          size: this.form.value.size
+          funds: this.form.value.size
         });
         break;
     }

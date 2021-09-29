@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription} from "rxjs";
-import {filter, map, mergeMap, takeUntil, tap} from "rxjs/operators";
+import {filter, finalize, map, mergeMap, retry, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
@@ -97,7 +97,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   loadTickers() {
     this.wsService.connect();
-    this.wsService.wsSubject$.subscribe(
+    this.wsService.wsSubject$.pipe(
+      retry()
+    ).subscribe(
       (v: any) => {
         if (v.type === 'ticker') {
           this.ticker$.next(v);
@@ -239,10 +241,70 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return Math.round(size / product.base_increment) / (1 / product.base_increment);
   }
   getFundsIncrement(product: any, funds: number) {
-    return Math.round(funds / product.base_increment) / (1 / product.base_increment);
+    return Math.round(funds / product.quote_increment) / (1 / product.quote_increment);
   }
 
   swap($event: any) {
+
+    const sellProduct = $event.sellProduct;
+    const buyProduct = $event.buyProduct;
+    const sellSize = $event.size;
+
+    const sellCurrency = sellProduct.quote_currency;
+    const accountPrevAvailable = this.getAccountAvailableSize(sellCurrency);
+
+    this.coinbaseProService.sellMarket(sellProduct.id, {size: sellSize}).pipe(
+      tap((r) => {
+        this.notify.open(sellProduct.id  + ' selled!');
+        console.log('response sell', r);
+      }),
+
+      mergeMap((r) => {
+        return this.coinbaseProService.getAccounts().pipe(
+          map((accounts: any[]) => {
+
+            const accountsFiltered = accounts.filter(
+              (r: any) => r.currency === sellCurrency
+            );
+
+            if (accountsFiltered[0]) {
+              return accountsFiltered[0].available;
+            }
+
+            return 0;
+          })
+        );
+      })
+    ).subscribe(
+      (accountAvailable) => {
+
+        console.log('accountPrevAvailable', accountPrevAvailable);
+        console.log('accountAvailable', accountAvailable);
+
+        let funds = accountAvailable - accountPrevAvailable;
+        funds = this.getFundsIncrement(buyProduct, funds);
+
+        this.coinbaseProService.buyMarket(buyProduct.id, {funds: funds}).pipe(
+          finalize(() => this.loadAccounts())
+        ).subscribe(
+          (result) => {
+            this.notify.open(buyProduct.id  + ' buyed!');
+            console.log('response buy', result);
+          },
+          error => {
+            console.log(error.error.message);
+            this.notify.open('Buy error: ' + error.error.message);
+          });
+
+      },
+      error => {
+        console.log(error.error.message);
+        this.notify.open('Sell error: ' + error.error.message);
+      });
+
+  }
+
+  _swap($event: any) {
 
     const sellProduct = $event.sellProduct;
     const buyProduct = $event.sellProduct;
@@ -309,9 +371,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   buy($event: any) {
 
     const buyProductId = $event.buyProduct.id;
-    const size = $event.size;
+    const funds = $event.funds;
 
-    this.coinbaseProService.buyMarket(buyProductId, {size: size}).subscribe(
+    this.coinbaseProService.buyMarket(buyProductId, {funds: funds}).subscribe(
       (result) => {
         this.notify.open(buyProductId  + ' buyed!');
         this.loadAccounts();

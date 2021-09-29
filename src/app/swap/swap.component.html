@@ -8,7 +8,7 @@
     </mat-radio-group>
   </div>
 
-  <div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-end">
+  <div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-start">
     <div *ngIf="form.controls.type.value !== 'buy'" class="flex-grow">
       <label>Sell:</label>
       <select formControlName="sell" class="w-full">
@@ -41,7 +41,8 @@
     </div>
 
     <div class="flex-shrink">
-      <label>Size:</label>
+      <label *ngIf="form.controls.type.value !== 'buy'">Size:</label>
+      <label *ngIf="form.controls.type.value === 'buy'">Funds:</label>
       <input type="text" formControlName="size" class="w-full">
       <p>
         <ng-container *ngIf="form.controls.type.value !== 'buy'">
@@ -53,14 +54,16 @@
 
         <ng-container *ngIf="form.controls.type.value === 'buy'">
           <small *ngIf="form.controls.buy.value as productBuy">
-            <strong>{{productBuy.base_currency}}</strong>
-            Available: {{getAccountAvailable(productBuy.base_currency)}}
+            <strong>{{productBuy.quote_currency}}</strong>
+            Available: {{getAccountAvailable(productBuy.quote_currency)}} -
+            Min: {{productBuy.min_market_funds}} - Increment: {{productBuy.quote_increment}}
           </small>
         </ng-container>
       </p>
     </div>
 
     <div>
+      <label>&nbsp;</label>
       <button mat-flat-button color="primary"
         [disabled]="form.invalid"
         (click)="confirm()">
@@ -68,7 +71,6 @@
         <span *ngIf="form.controls.type.value === 'sell'">SELL</span>
         <span *ngIf="form.controls.type.value === 'buy'">BUY</span>
       </button>
-      <p></p>
     </div>
   </div>
 
