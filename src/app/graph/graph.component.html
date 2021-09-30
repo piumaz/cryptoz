@@ -55,7 +55,8 @@
           <div [style.color]="colorScheme.domain[i]"><strong>{{currency}}</strong></div>
           <div class="text-xs">
             <!--Average:-->
-            {{average[currency]}}<br/>
+            {{getPrice(average[currency], currency, 'USDT') | currency : 'USD'}} -
+            {{getPrice(average[currency], currency, 'EUR') | currency : 'EUR'}}<br>
             <!--Rate:-->
             <span class="rounded-md ring-1 ring-gray-900 ring-opacity-5 px-1" [class.grey]="rate[currency] == 0" [class.green]="rate[currency] > 0" [class.red]="rate[currency] < 0">
               {{rate[currency]}}%
@@ -75,7 +76,10 @@
                 <mat-icon *ngSwitchCase="'red'">arrow_downward</mat-icon>
                 <mat-icon *ngSwitchCase="'green'">arrow_upward</mat-icon>
               </ng-container>
-              <span>{{item[currency].price}}</span>
+              <span>
+                {{getPrice(item[currency].price, currency, 'USDT') | currency : 'USD'}}<br>
+                {{getPrice(item[currency].price, currency, 'EUR') | currency : 'EUR'}}
+              </span>
             </span>
           </ng-container>
 

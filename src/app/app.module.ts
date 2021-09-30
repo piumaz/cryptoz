@@ -14,8 +14,8 @@ import {MaterialModule} from "./material.module";
 import { GraphComponent } from './graph/graph.component'
 import { WalletComponent } from './wallet/wallet.component';
 import { SwapComponent } from './swap/swap.component';
-import { OrdersComponent } from './orders/orders.component'
-
+import { OrdersComponent } from './orders/orders.component';
+import { TrendObserverComponent } from './trend-observer/trend-observer.component'
 
 @NgModule({
   declarations: [
@@ -25,7 +25,8 @@ import { OrdersComponent } from './orders/orders.component'
     ChartsComponent,
     WalletComponent,
     SwapComponent,
-    OrdersComponent
+    OrdersComponent,
+    TrendObserverComponent
   ],
   imports: [
     BrowserModule,

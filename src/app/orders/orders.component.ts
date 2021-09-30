@@ -8,6 +8,7 @@ import {FormControl} from "@angular/forms";
 })
 export class OrdersComponent implements OnInit {
 
+  @Input() USDEUR: number = 1;
   @Input() orders: any[] = [];
   @Input() fills: any[] = [];
   @Input() products: any[] = [];

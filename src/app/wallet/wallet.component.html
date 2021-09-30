@@ -12,4 +12,16 @@
     <div *ngIf="!item.trading_enabled"><small>Not enable for trading</small></div>
   </div>
   <div>{{item.available}}</div>
+  <div>
+    <span>
+      {{getFunds(item, 'USDT') | currency : 'USD'}}<br>
+      <small>{{getPrice(item, 'USDT') | currency : 'USD'}}</small>
+    </span>
+  </div>
+  <div>
+    <span>
+      {{getFunds(item, 'EUR') | currency : 'EUR'}}<br>
+      <small>{{getPrice(item, 'EUR') | currency : 'EUR'}}</small>
+    </span>
+  </div>
 </div>

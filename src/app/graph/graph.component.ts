@@ -43,12 +43,15 @@ export interface Ticker {
 })
 export class GraphComponent implements OnInit, OnDestroy {
 
+  @Input() USDEUR: number = 1;
+
   @Input() set ticker(value: Ticker) {
     if (value) {
       this.addTicker(value);
       this.calculateData();
     }
   }
+
   @Input() products: any[] = [];
   @Input() accounts: any[] = [];
 
@@ -228,7 +231,7 @@ export class GraphComponent implements OnInit, OnDestroy {
     if (!to) {
       to = from;
     }
-    return (((from - to) / from) * 100).toFixed(2);
+    return (((from - to) / from) * 100).toFixed(3);
   }
 
   selectedManagedSymbol(event: MatAutocompleteSelectedEvent): void {
@@ -290,5 +293,17 @@ export class GraphComponent implements OnInit, OnDestroy {
     }
 
     return 'grey';
+  }
+
+  getPrice(price: number, productId: string, to: 'EUR' | 'USDT') {
+
+    const currency = productId.split('-')[1];
+
+    if (currency === 'EUR') {
+      return to === 'EUR' ? price : price / this.USDEUR;
+    }
+
+    return to === 'USDT' ? price : price * this.USDEUR;
+
   }
 }

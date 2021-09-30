@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {map} from "rxjs/operators";
+import {Ticker} from "../graph/graph.component";
 
 @Component({
   selector: 'app-swap',
@@ -9,8 +10,17 @@ import {map} from "rxjs/operators";
 })
 export class SwapComponent implements OnInit {
 
+  @Input() USDEUR: number = 1;
   @Input() products: any[] = [];
   @Input() accounts: any[] = [];
+
+  @Input() set loading(value: boolean) {
+    if (value === true) {
+      this.form.disable();
+    } else {
+      this.form.enable();
+    }
+  }
 
   @Output() swap: EventEmitter<any> = new EventEmitter();
   @Output() sell: EventEmitter<any> = new EventEmitter();
@@ -71,6 +81,16 @@ export class SwapComponent implements OnInit {
         const funds = this.getAccountAvailable(value?.quote_currency);
         this.form.controls.size.patchValue(funds);
       }
+    });
+  }
+
+  invertSwap() {
+    const sell = this.form.value.sell;
+    const buy = this.form.value.buy;
+
+    this.form.patchValue({
+      sell: buy,
+      buy: sell
     });
   }
 

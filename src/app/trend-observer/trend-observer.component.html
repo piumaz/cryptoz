@@ -1,0 +1,64 @@
+<form [formGroup]="form">
+
+  <div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-start">
+    <div class="flex-grow">
+      <label>Product:</label>
+      <select formControlName="product" class="w-full">
+        <option [ngValue]="null">...</option>
+        <option *ngFor="let item of products" [ngValue]="item">
+          {{item.id}}
+        </option>
+      </select>
+    </div>
+
+    <div class="flex-shrink">
+      <label>Price:</label>
+      <input type="text" formControlName="price" class="w-full">
+    </div>
+    <div class="flex-shrink">
+      <label>Size:</label>
+      <input type="text" formControlName="size" class="w-full">
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button mat-flat-button color="primary"
+              [disabled]="form.invalid"
+              (click)="add()">
+        <span>ADD</span>
+      </button>
+    </div>
+  </div>
+
+</form>
+
+
+
+<div *ngFor="let item of observer; let i = index" class="grid grid-flow-col auto-cols-fr items-center gap-4 border-b p-4">
+  <div>
+    <strong>{{item.product.id}}</strong>
+    <div *ngIf="item.size">
+      <small>Size: {{item.size}}</small>
+    </div>
+  </div>
+  <div>
+    {{item.price}}
+    <div *ngIf="item.size">
+      <small>{{oldFunds(item)}}</small>
+    </div>
+  </div>
+  <div>
+    {{prices[item.product.id]}}
+    <div *ngIf="item.size">
+      <small>{{newFunds(item)}}</small>
+    </div>
+  </div>
+  <div [style.color]="getPriceColor(item)">
+    <strong>{{diff(item.price, prices[item.product.id])}}% ({{earn(item.price, prices[item.product.id])}})</strong><br>
+    <div *ngIf="item.size">
+      <small>{{earn(oldFunds(item), newFunds(item))}}</small>
+    </div>
+  </div>
+  <button mat-icon-button color="warn" (click)="remove(i)">
+    <mat-icon>remove_circle_outline</mat-icon>
+  </button>
+</div>
