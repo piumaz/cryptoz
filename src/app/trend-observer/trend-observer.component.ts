@@ -50,6 +50,11 @@ export class TrendObserverComponent implements OnInit {
   }
 
   remove(index: number) {
+
+    if (!window.confirm(`Are you sure?`)) {
+      return;
+    }
+
     this.observer.splice(index, 1);
     this.setStorage();
   }
