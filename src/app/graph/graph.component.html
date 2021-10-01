@@ -46,16 +46,16 @@
     [results]="chartData"></app-charts>
 </div>
 
-<div *ngIf="history.length" class="my-4">
+<div *ngIf="history.length" class="my-4 overflow-x-auto">
 
-  <table class="min-w-full divide-y divide-gray-200">
+  <table class="border-collapse bg-transparent min-w-full divide-y divide-gray-200 text-md">
     <thead class="bg-gray-50">
       <tr>
-        <th *ngFor="let currency of getProductsId(); let i = index" class="px-6 py-3 text-center font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+        <th *ngFor="let currency of getProductsId(); let i = index" class="p-2 text-center font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
           <div [style.color]="colorScheme.domain[i]"><strong>{{currency}}</strong></div>
           <div class="text-xs">
             <!--Average:-->
-            {{getPrice(average[currency], currency, 'USDT') | currency : 'USD'}} -
+            {{getPrice(average[currency], currency, 'USDT') | currency : 'USD'}}<br>
             {{getPrice(average[currency], currency, 'EUR') | currency : 'EUR'}}<br>
             <!--Rate:-->
             <span class="rounded-md ring-1 ring-gray-900 ring-opacity-5 px-1" [class.grey]="rate[currency] == 0" [class.green]="rate[currency] > 0" [class.red]="rate[currency] < 0">
@@ -66,9 +66,9 @@
       </tr>
     </thead>
 
-    <tbody class="bg-white divide-y divide-gray-200">
+    <tbody class="divide-y divide-gray-200">
       <tr *ngFor="let item of history.slice(0, 10); let i = index">
-        <td *ngFor="let currency of getProductsId()" class="px-6 py-4 whitespace-nowrap text-right">
+        <td *ngFor="let currency of getProductsId()" class="p-2 whitespace-nowrap text-right text-xs">
 
           <ng-container *ngIf="item[currency] && item[currency].price">
             <span class="price" [style.color]="getPriceColor(item[currency].price, history[i+1] && history[i+1][currency] ? history[i+1][currency].price : item[currency].price)">

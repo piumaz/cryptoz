@@ -43,14 +43,14 @@ export class WalletComponent implements OnInit {
     let productId = currency + '-' + to;
     let price = this.prices[productId];
     if (price) {
-      return price;
+      return Number(price);
     }
 
     if (to === 'EUR') {
       productId = account.currency + '-USDT';
       price = this.prices[productId];
       if (price) {
-        return price * this.USDEUR;
+        return Number(price) * this.USDEUR;
       }
     }
 
@@ -58,7 +58,7 @@ export class WalletComponent implements OnInit {
       productId = account.currency + '-EUR';
       price = this.prices[productId];
       if (price) {
-        return price / this.USDEUR;
+        return Number(price) / this.USDEUR;
       }
     }
 

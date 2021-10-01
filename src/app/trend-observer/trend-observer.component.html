@@ -24,7 +24,7 @@
       <button mat-flat-button color="primary"
               [disabled]="form.invalid"
               (click)="add()">
-        <span>ADD</span>
+        <span>OBSERVE</span>
       </button>
     </div>
   </div>
@@ -32,33 +32,38 @@
 </form>
 
 
-
-<div *ngFor="let item of observer; let i = index" class="grid grid-flow-col auto-cols-fr items-center gap-4 border-b p-4">
-  <div>
-    <strong>{{item.product.id}}</strong>
-    <div *ngIf="item.size">
-      <small>Size: {{item.size}}</small>
-    </div>
-  </div>
-  <div>
-    {{item.price}}
-    <div *ngIf="item.size">
-      <small>{{oldFunds(item)}}</small>
-    </div>
-  </div>
-  <div>
-    {{prices[item.product.id]}}
-    <div *ngIf="item.size">
-      <small>{{newFunds(item)}}</small>
-    </div>
-  </div>
-  <div [style.color]="getPriceColor(item)">
-    <strong>{{diff(item.price, prices[item.product.id])}}% ({{earn(item.price, prices[item.product.id])}})</strong><br>
-    <div *ngIf="item.size">
-      <small>{{earn(oldFunds(item), newFunds(item))}}</small>
-    </div>
-  </div>
-  <button mat-icon-button color="warn" (click)="remove(i)">
-    <mat-icon>remove_circle_outline</mat-icon>
-  </button>
-</div>
+<table class="border-collapse bg-transparent min-w-full divide-y divide-gray-200 text-xs">
+<tbody class="divide-y divide-gray-200">
+  <tr *ngFor="let item of observer; let i = index">
+    <td class="px-0">
+      <strong>{{item.product.id}}</strong>
+      <div *ngIf="item.size">
+        {{item.size}}
+      </div>
+    </td>
+    <td class="px-2 text-right">
+      {{item.price}}
+      <div *ngIf="item.size">
+        <small>{{oldFunds(item)}}</small>
+      </div>
+    </td>
+    <td class="px-2 text-right">
+      {{prices[item.product.id]}}
+      <div *ngIf="item.size">
+        <small>{{newFunds(item)}}</small>
+      </div>
+    </td>
+    <td  class="px-2 text-right" [style.color]="getPriceColor(item)">
+      <strong>{{diff(item.price, prices[item.product.id])}}% ({{earn(item.price, prices[item.product.id])}})</strong><br>
+      <div *ngIf="item.size">
+        <small>{{earn(oldFunds(item), newFunds(item))}}</small>
+      </div>
+    </td>
+    <td class="px-0 text-right">
+      <button mat-icon-button color="warn" (click)="remove(i)">
+        <mat-icon>remove_circle_outline</mat-icon>
+      </button>
+    </td>
+  </tr>
+</tbody>
+</table>

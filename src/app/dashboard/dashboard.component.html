@@ -4,7 +4,7 @@
     From {{startedAt | date : 'short'}}
   </p>
   <p>
-    {{1 | currency : 'EUR'}}/{{USDEUR | currency : 'USD'}}
+    {{1 / USDEUR | currency : 'USD'}}/{{USDEUR | currency : 'EUR'}}
   </p>
 </div>
 
@@ -21,6 +21,7 @@
   ></app-swap>
 
   <app-trend-observer
+    class="block p-2 mb-4 bg-gray-50 shadow overflow-hidden rounded-lg"
     [USDEUR]="USDEUR"
     [ticker]="ticker$ | async"
     [products]="products$ | async"
@@ -31,7 +32,7 @@
   ></app-trend-observer>
 </div>
 
-<mat-tab-group dynamicHeight>
+<mat-tab-group dynamicHeight color="primary" class="pb-10">
 
   <mat-tab label="Graph">
     <app-graph
@@ -50,7 +51,7 @@
       [ticker]="ticker$ | async"
       [currencies]="currencies$ | async"
       [accounts]="accounts$ | async"
-      class="block mt-2 bg-white shadow overflow-hidden rounded-lg"></app-wallet>
+      class="block mt-2"></app-wallet>
   </mat-tab>
 
   <mat-tab label="Orders">
@@ -60,7 +61,7 @@
       [fills]="fills$ | async"
       [products]="products$ | async"
       (productSelected)="loadFills($event)"
-      class="block mt-2 bg-white shadow overflow-hidden rounded-lg"></app-orders>
+      class="block mt-2"></app-orders>
   </mat-tab>
 
 </mat-tab-group>

@@ -99,6 +99,10 @@ export class GraphComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+
+    this.selectedSymbols = this.getStorage().selectedSymbols || [];
+    this.selectedSymbols.forEach(symbol => this.productAdded.emit(symbol));
+
     this.uiForm = this.fb.group({
       symbols: [null, Validators.required],
     });
@@ -241,6 +245,7 @@ export class GraphComponent implements OnInit, OnDestroy {
       // this.symbolsInput.nativeElement.value = '';
       this.uiForm.get('symbols')?.patchValue(null);
     }
+    this.setStorage();
   }
 
   getSelectedManagedSymbols() {
@@ -268,6 +273,7 @@ export class GraphComponent implements OnInit, OnDestroy {
       return item.name !== symbol;
     });
 
+    this.setStorage();
   }
 
   getFilteresManagedSymbols(): any[] {
@@ -306,4 +312,18 @@ export class GraphComponent implements OnInit, OnDestroy {
     return to === 'USDT' ? price : price * this.USDEUR;
 
   }
+
+  setStorage() {
+    const storage: any = {
+      selectedSymbols: this.selectedSymbols
+    }
+    localStorage.setItem('cryptoz.graph', JSON.stringify(storage));
+  }
+  getStorage(): any {
+    const storage = localStorage.getItem('cryptoz.graph') || '{}';
+    const storageValue: any = JSON.parse(storage);
+
+    return storageValue;
+  }
+
 }

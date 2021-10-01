@@ -1,6 +1,10 @@
 
 <h3>Open</h3>
-<table class="min-w-full divide-y divide-gray-200">
+<p *ngIf="!orders.length">
+  No items to show...
+</p>
+<div class="overflow-x-auto">
+  <table *ngIf="orders.length" class="min-w-full divide-y divide-gray-200">
   <thead class="bg-gray-50">
   <tr>
     <th>Side</th>
@@ -19,11 +23,12 @@
   </tr>
   </tbody>
 </table>
+</div>
 
 <hr>
 
 <h3>Filled</h3>
-<div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-start">
+<div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-start mb-4">
   <div class="flex-grow">
     <label>Product:</label>
     <select [formControl]="product" class="w-full">
@@ -35,29 +40,37 @@
   </div>
 </div>
 
-<table class="min-w-full divide-y divide-gray-200">
+<p *ngIf="!fills.length && product.value">
+  No items to show for {{product.value?.id}}
+</p>
+<p *ngIf="!product.value">
+  Select a product!
+</p>
+
+<div class="overflow-x-auto">
+  <table *ngIf="fills.length" class="min-w-full divide-y divide-gray-200">
   <thead class="bg-gray-50">
   <tr>
     <th>Side</th>
-    <th>Market</th>
+<!--    <th>Market</th>-->
     <th>Size</th>
     <th>Filled</th>
-    <th>Filled Price</th>
+    <th>Price</th>
     <th>Fee</th>
     <th>Date</th>
   </tr>
   </thead>
 
   <tbody class="bg-white divide-y divide-gray-200">
-  <tr *ngFor="let item of fills">
-    <td>{{item.side}}</td>
-    <td>{{item.product_id}}</td>
-    <td>{{item.size}}</td>
-    <td>{{item?.usd_volume | currency : 'USD'}}</td>
-    <td>{{item.price}}</td>
-    <td>{{item.fee}}</td>
-    <td>{{item.created_at | date : 'short'}}</td>
-  </tr>
+    <tr *ngFor="let item of fills">
+      <td>{{item.side}}</td>
+<!--      <td>{{item.product_id}}</td>-->
+      <td>{{item.size}}</td>
+      <td>{{item?.usd_volume | currency : 'USD'}}</td>
+      <td>{{item.price}}</td>
+      <td>{{item.fee}}</td>
+      <td>{{item.created_at | date : 'short'}}</td>
+    </tr>
   </tbody>
 </table>
-
+</div>

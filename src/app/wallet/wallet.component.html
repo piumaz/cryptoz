@@ -1,27 +1,30 @@
 
-<div *ngFor="let item of getAccounts()" class="grid grid-flow-col auto-cols-fr items-center gap-4 border-b p-4">
-  <div>
-    <img
-      style="width:32px; height:32px;"
-      src="assets/crypto/color/{{item.currency | lowercase}}.svg"
-      onerror="this.src='assets/crypto/white/generic.svg'">
-  </div>
-  <div>
-    <strong>{{item.currency}}</strong>
-    <div>{{getCurrencyName(item.currency)}}</div>
-    <div *ngIf="!item.trading_enabled"><small>Not enable for trading</small></div>
-  </div>
-  <div>{{item.available}}</div>
-  <div>
-    <span>
-      {{getFunds(item, 'USDT') | currency : 'USD'}}<br>
-      <small>{{getPrice(item, 'USDT') | currency : 'USD'}}</small>
-    </span>
-  </div>
-  <div>
-    <span>
-      {{getFunds(item, 'EUR') | currency : 'EUR'}}<br>
-      <small>{{getPrice(item, 'EUR') | currency : 'EUR'}}</small>
-    </span>
-  </div>
-</div>
+<table class="border-collapse bg-transparent min-w-full divide-y divide-gray-200 text-md">
+  <tbody class="divide-y divide-gray-200">
+    <tr *ngFor="let item of getAccounts()">
+      <td class="px-0">
+        <img
+          style="width:32px; height:32px;"
+          src="assets/crypto/color/{{item.currency | lowercase}}.svg"
+          onerror="this.src='assets/crypto/white/generic.svg'">
+      </td>
+      <td class="px-2 truncate">
+        <strong>{{item.currency}}</strong> {{getCurrencyName(item.currency)}}<br>
+        <small class="truncate">{{item.available}}</small>
+        <div *ngIf="!item.trading_enabled"><small>Not enable for trading</small></div>
+      </td>
+      <td class="px-2 text-right">
+        <span>
+          {{getFunds(item, 'USDT') | currency : 'USD'}}<br>
+          <small>{{getPrice(item, 'USDT')?.toFixed(2)}}</small>
+        </span>
+      </td>
+      <td class="pl-2 pr-0 text-right">
+        <span>
+          {{getFunds(item, 'EUR') | currency : 'EUR'}}<br>
+          <small>{{getPrice(item, 'EUR')?.toFixed(2)}}</small>
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
