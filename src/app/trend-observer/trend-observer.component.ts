@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Ticker} from "../graph/graph.component";
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 
@@ -23,6 +23,9 @@ export class TrendObserverComponent implements OnInit {
   @Input() orders: any[] = [];
   @Input() fills: any[] = [];
 
+  @Output() productAdded: EventEmitter<any> = new EventEmitter();
+  @Output() productRemoved: EventEmitter<any> = new EventEmitter();
+
   public prices: any = {};
 
   public form: FormGroup = new FormGroup({});
@@ -41,10 +44,23 @@ export class TrendObserverComponent implements OnInit {
     });
 
     this.observer = this.getStorage().observer || [];
+
+    const products = this.observer.map(item => item.product.id);
+    const uniqueProducts = new Set(products);
+
+    uniqueProducts.forEach(productId => this.productAdded.emit(productId));
+
   }
 
   add() {
-    this.observer.unshift(this.form.value);
+    const value = this.form.value;
+    this.observer.unshift(value);
+
+    const exist = this.observer.filter(item => item.product === value.product);
+    if (!exist.length) {
+      this.productAdded.emit(value.product);
+    }
+
     this.form.reset();
     this.setStorage();
   }
@@ -53,6 +69,11 @@ export class TrendObserverComponent implements OnInit {
 
     if (!window.confirm(`Are you sure?`)) {
       return;
+    }
+
+    const exist = this.observer.filter(item => item.product === this.observer[index].product);
+    if (!exist.length) {
+      this.productRemoved.emit(this.observer[index].product);
     }
 
     this.observer.splice(index, 1);

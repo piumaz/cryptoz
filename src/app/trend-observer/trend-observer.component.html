@@ -1,6 +1,6 @@
-<form [formGroup]="form">
+<form [formGroup]="form" class="mb-2 pb-2 border-b">
 
-  <div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-start">
+  <div class="flex flex-row justify-between place-items-stretch gap-2 items-start">
     <div class="flex-grow">
       <label>Product:</label>
       <select formControlName="product" class="w-full">
@@ -21,10 +21,11 @@
     </div>
     <div>
       <label>&nbsp;</label>
-      <button mat-flat-button color="primary"
+      <button mat-icon-button color="primary"
               [disabled]="form.invalid"
               (click)="add()">
-        <span>OBSERVE</span>
+<!--        <span>OBSERVE</span>-->
+        <mat-icon>add_circle</mat-icon>
       </button>
     </div>
   </div>
@@ -36,9 +37,9 @@
 <tbody class="divide-y divide-gray-200">
   <tr *ngFor="let item of observer; let i = index">
     <td class="px-0">
-      <strong>{{item.product.id}}</strong>
+      <strong class="text-primary">{{item.product.id}}</strong>
       <div *ngIf="item.size">
-        {{item.size}}
+        <small>{{item.size}}</small>
       </div>
     </td>
     <td class="px-2 text-right">
@@ -47,7 +48,7 @@
         <small>{{oldFunds(item)}}</small>
       </div>
     </td>
-    <td class="px-2 text-right">
+    <td class="px-2 text-right bg-indigo-50">
       {{prices[item.product.id]}}
       <div *ngIf="item.size">
         <small>{{newFunds(item)}}</small>

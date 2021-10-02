@@ -18,7 +18,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   public USDEUR: number = 1;
 
-  public productsGraphSelectd: string[] = [];
+  public productsTicker: string[] = [];
 
   public currencies$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public products$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
@@ -62,20 +62,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.intervalSub.unsubscribe();
   }
 
-  addProductsGraphSelected(productId: string) {
-    this.productsGraphSelectd.push(productId);
+  addProductTicker(productId: string) {
+    this.productsTicker.push(productId);
     this.subscribeWsTickers([productId]);
   }
 
-  removeProductsGraphSelected(productId: string) {
-    this.productsGraphSelectd = this.productsGraphSelectd.filter(
+  removeProductTicker(productId: string) {
+    this.productsTicker = this.productsTicker.filter(
       (v: string) => v !== productId
     );
     this.unsubscribeWsTickers([productId]);
   }
 
-  getProductsGraphSelected() {
-    return this.productsGraphSelectd;
+  getProductsTicker() {
+    return this.productsTicker;
   }
 
   subscribeWsTickers(productIds: string[]) {
@@ -108,6 +108,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.subscribeWsTickers(['USDT-EUR']);
 
+
     this.wsService.wsSubject$.pipe(
       retry()
     ).subscribe(
@@ -116,64 +117,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (v.product_id === 'USDT-EUR') {
             this.USDEUR = v.price;
           }
-          if (this.getProductsGraphSelected().includes(v.product_id)) {
-            this.ticker$.next(v);
-          }
+
+          this.ticker$.next(v);
         }
       }
     );
-  }
-
-  loadPrices() {
-
-    let observables: any = {};
-
-    // per tutti gli account con soldi
-    // più quelli che voglio osservare
-    const accountsWithMoney = this.accounts$.getValue().filter(
-      (item: any) => item.available > 0 && !['EUR','USDT'].includes(item.currency)
-    ).map(
-      (item: any) => item.currency + '-USDT'
-    );
-
-    const productsGraphSelected = this.getProductsGraphSelected();
-
-    const products = [...new Set([
-      ...accountsWithMoney,
-      ...productsGraphSelected
-    ])];
-
-    products.forEach((productId: string) => {
-      observables[productId] = this.coinbaseProService.getProductTicker(productId).pipe(
-        map((result: any) => {
-          return {
-            symbol: productId,
-            price: Number(result.price)
-          };
-        })
-      );
-    });
-
-
-    forkJoin(observables).pipe(
-      takeUntil(this.destroy$),
-      map((result: any) => {
-
-        let rows: any[] = [];
-
-        const symbols = Object.keys(result);
-
-        symbols.forEach((symbol: string) => {
-          rows.push(result[symbol]);
-        });
-
-        return rows;
-      })
-    ).subscribe(
-      result => this.prices$.next(result),
-      err => this.prices$.error(err)
-    );
-
   }
 
   loadAccounts() {
@@ -182,6 +130,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return r.sort((a: any, b: any) => {
           return b.available - a.available;
         });
+      }),
+      map((r: any) => {
+        // add tickers
+        r.filter(
+          (item: any) => item.available > 0 && !['EUR','USDT'].includes(item.currency)
+        ).map(
+          (item: any) => {
+            this.subscribeWsTickers([item.currency + '-EUR']);
+            this.subscribeWsTickers([item.currency + '-USDT']);
+          }
+        );
+
+        return r;
       })
     ).subscribe(
       result => this.accounts$.next(result),
@@ -383,4 +344,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.notify.open('Buy error: ' + error.error.message);
       });
   }
+
+/*
+  loadPrices() {
+
+    let observables: any = {};
+
+    // per tutti gli account con soldi
+    // più quelli che voglio osservare
+    const accountsWithMoney = this.accounts$.getValue().filter(
+      (item: any) => item.available > 0 && !['EUR','USDT'].includes(item.currency)
+    ).map(
+      (item: any) => item.currency + '-USDT'
+    );
+
+    const productsGraphSelected = this.getProductsGraphSelected();
+
+    const products = [...new Set([
+      ...accountsWithMoney,
+      ...productsGraphSelected
+    ])];
+
+    products.forEach((productId: string) => {
+      observables[productId] = this.coinbaseProService.getProductTicker(productId).pipe(
+        map((result: any) => {
+          return {
+            symbol: productId,
+            price: Number(result.price)
+          };
+        })
+      );
+    });
+
+
+    forkJoin(observables).pipe(
+      takeUntil(this.destroy$),
+      map((result: any) => {
+
+        let rows: any[] = [];
+
+        const symbols = Object.keys(result);
+
+        symbols.forEach((symbol: string) => {
+          rows.push(result[symbol]);
+        });
+
+        return rows;
+      })
+    ).subscribe(
+      result => this.prices$.next(result),
+      err => this.prices$.error(err)
+    );
+
+  }
+*/
+
 }

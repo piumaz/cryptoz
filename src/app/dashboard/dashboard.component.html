@@ -8,9 +8,9 @@
   </p>
 </div>
 
-<div>
+<div class="flex flex-col md:flex-row gap-2">
   <app-swap
-    class="block p-2 mb-4 bg-gray-50 shadow overflow-hidden rounded-lg"
+    class="block p-2 mb-4 bg-indigo-50 shadow overflow-hidden rounded-lg"
     [USDEUR]="USDEUR"
     [products]="products$ | async"
     [accounts]="accounts$ | async"
@@ -21,7 +21,7 @@
   ></app-swap>
 
   <app-trend-observer
-    class="block p-2 mb-4 bg-gray-50 shadow overflow-hidden rounded-lg"
+    class="block p-2 mb-4 shadow overflow-hidden rounded-lg flex-1"
     [USDEUR]="USDEUR"
     [ticker]="ticker$ | async"
     [products]="products$ | async"
@@ -29,6 +29,8 @@
     [currencies]="currencies$ | async"
     [orders]="orders$ | async"
     [fills]="fills$ | async"
+    (productAdded)="addProductTicker($event)"
+    (productRemoved)="removeProductTicker($event)"
   ></app-trend-observer>
 </div>
 
@@ -40,8 +42,8 @@
       [ticker]="ticker$ | async"
       [products]="products$ | async"
       [accounts]="accounts$ | async"
-      (productAdded)="addProductsGraphSelected($event)"
-      (productRemoved)="removeProductsGraphSelected($event)"
+      (productAdded)="addProductTicker($event)"
+      (productRemoved)="removeProductTicker($event)"
       class="block mt-2"></app-graph>
   </mat-tab>
 

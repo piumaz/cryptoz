@@ -17,6 +17,7 @@ export interface OrdersLimitParams {
 export class CoinbaseProService {
 
   private api = 'http://localhost:3000/coinbase';
+  // private api = "https://api.pro.coinbase.com";
 
   constructor(private http: HttpClient) { }
 

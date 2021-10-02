@@ -19,6 +19,9 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 * {
   @apply leading-normal;
 }
+.text-primary {
+  color: var(--primary-color);
+}
 
 // Headings
 h1 {
@@ -93,7 +96,7 @@ a {
 
 // Tables
 table {
-  @apply table border-separate border-gray-200 align-middle text-left bg-gray-200 rounded;
+  @apply table border-collapse border-gray-200 align-middle text-left rounded;
 
   caption {
     @apply p-3;
@@ -101,6 +104,7 @@ table {
 
   thead tr th {
     @apply py-2 px-4;
+    color: var(--primary-color);
   }
 
   tbody tr td {

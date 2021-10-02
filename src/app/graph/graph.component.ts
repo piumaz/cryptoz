@@ -45,9 +45,9 @@ export class GraphComponent implements OnInit, OnDestroy {
 
   @Input() USDEUR: number = 1;
 
-  @Input() set ticker(value: Ticker) {
-    if (value) {
-      this.addTicker(value);
+  @Input() set ticker(ticker: Ticker) {
+    if (ticker && this.getSelectedManagedSymbols().includes(ticker.product_id)) {
+      this.addTicker(ticker);
       this.calculateData();
     }
   }
@@ -144,7 +144,9 @@ export class GraphComponent implements OnInit, OnDestroy {
         item[productId] = this.tickers[productId][0]
       });
 
-      this.history.unshift(item);
+      if (!this.history[0] || JSON.stringify(this.history[0]) !== JSON.stringify(item)) {
+        this.history.unshift(item);
+      }
 
       const limit = 300;
       if (this.history[limit]) {

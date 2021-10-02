@@ -6,16 +6,10 @@
       <mat-button-toggle value="sell" class="w-full">Sell</mat-button-toggle>
       <mat-button-toggle value="buy" class="w-full">Buy</mat-button-toggle>
     </mat-button-toggle-group>
-
-<!--    <mat-radio-group formControlName="type" class="flex flex-row gap-4">
-      <mat-radio-button value="swap">Swap</mat-radio-button>
-      <mat-radio-button value="sell">Sell</mat-radio-button>
-      <mat-radio-button value="buy">Buy</mat-radio-button>
-    </mat-radio-group>-->
   </div>
 
-  <div class="flex flex-row justify-between place-items-stretch md:w-max gap-2 items-start">
-    <div *ngIf="form.controls.type.value !== 'buy'" class="flex-grow">
+  <div class="flex flex-row justify-between place-items-stretch gap-2 items-start">
+    <div *ngIf="form.controls.type.value !== 'buy'" class="w-1/3">
       <label>Sell:</label>
       <select formControlName="sell" class="w-full">
         <option [ngValue]="null">...</option>
@@ -30,7 +24,8 @@
         </small>
       </p>
     </div>
-    <div *ngIf="form.controls.type.value !== 'sell'" class="flex-grow">
+
+    <div *ngIf="form.controls.type.value !== 'sell'" class="w-1/3">
       <label>Buy:</label>
       <select formControlName="buy" class="w-full">
         <option [ngValue]="null">...</option>
@@ -46,7 +41,7 @@
       </p>
     </div>
 
-    <div class="flex-shrink">
+    <div class="flex-1 w-1/3">
       <label *ngIf="form.controls.type.value !== 'buy'">Size:</label>
       <label *ngIf="form.controls.type.value === 'buy'">Funds:</label>
       <input type="text" formControlName="size" class="w-full">
@@ -67,17 +62,16 @@
         </ng-container>
       </p>
     </div>
+  </div>
 
-    <div>
-      <label>&nbsp;</label>
-      <button mat-flat-button color="primary"
-        [disabled]="form.invalid"
-        (click)="confirm()">
-        <span *ngIf="form.controls.type.value === 'swap'">SWAP</span>
-        <span *ngIf="form.controls.type.value === 'sell'">SELL</span>
-        <span *ngIf="form.controls.type.value === 'buy'">BUY</span>
-      </button>
-    </div>
+  <div>
+    <button mat-flat-button color="primary" class="w-full"
+            [disabled]="form.invalid"
+            (click)="confirm()">
+      <span *ngIf="form.controls.type.value === 'swap'">SWAP</span>
+      <span *ngIf="form.controls.type.value === 'sell'">SELL</span>
+      <span *ngIf="form.controls.type.value === 'buy'">BUY</span>
+    </button>
   </div>
 
 </form>

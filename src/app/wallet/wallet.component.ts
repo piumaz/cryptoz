@@ -70,10 +70,10 @@ export class WalletComponent implements OnInit {
     const currency = account.currency;
 
     if (currency === 'USDT') {
-      return to === 'USDT' ? account.available : account.available / this.USDEUR;
+      return to === 'USDT' ? account.available : account.available * this.USDEUR;
     }
     if (currency === 'EUR') {
-      return to === 'EUR' ? account.available : account.available * this.USDEUR;
+      return to === 'EUR' ? account.available : account.available / this.USDEUR;
     }
 
     let productId = account.currency + '-' + to;
@@ -86,7 +86,7 @@ export class WalletComponent implements OnInit {
       productId = account.currency + '-USDT';
       price = this.prices[productId];
       if (price) {
-        return price * account.available / this.USDEUR;
+        return price * account.available * this.USDEUR;
       }
     }
 
@@ -94,7 +94,7 @@ export class WalletComponent implements OnInit {
       productId = account.currency + '-EUR';
       price = this.prices[productId];
       if (price) {
-        return price * account.available * this.USDEUR;
+        return price * account.available / this.USDEUR;
       }
     }
 
