@@ -22,7 +22,7 @@
 
 <div class="my-2">
   <mat-chip
-    *ngFor="let symbol of getSelectedManagedSymbols()"
+    *ngFor="let symbol of selected"
     [selectable]="false"
     [removable]="true"
     (removed)="removeSelectedManagedSymbols(symbol)">
@@ -51,7 +51,7 @@
   <table class="border-collapse bg-transparent min-w-full divide-y divide-gray-200 text-md">
     <thead class="bg-gray-50">
       <tr>
-        <th *ngFor="let currency of getProductsId(); let i = index" class="p-2 text-center font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+        <th *ngFor="let currency of getTickersProductsId(); let i = index" class="p-2 text-center font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
           <div [style.color]="colorScheme.domain[i]"><strong>{{currency}}</strong></div>
           <div class="text-xs">
             <!--Average:-->
@@ -68,7 +68,7 @@
 
     <tbody class="divide-y divide-gray-200">
       <tr *ngFor="let item of history.slice(0, 10); let i = index">
-        <td *ngFor="let currency of getProductsId()" class="p-2 whitespace-nowrap text-right text-xs">
+        <td *ngFor="let currency of getTickersProductsId()" class="p-2 whitespace-nowrap text-right text-xs">
 
           <ng-container *ngIf="item[currency] && item[currency].price">
             <span class="price" [style.color]="getPriceColor(item[currency].price, history[i+1] && history[i+1][currency] ? history[i+1][currency].price : item[currency].price)">

@@ -1,5 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {FormControl} from "@angular/forms";
+import {Product, TrendObserver} from "../interfaces";
 
 @Component({
   selector: 'app-orders',
@@ -13,7 +14,8 @@ export class OrdersComponent implements OnInit {
   @Input() fills: any[] = [];
   @Input() products: any[] = [];
 
-  @Output() productSelected: EventEmitter<any> = new EventEmitter();
+  @Output() productSelected: EventEmitter<Product> = new EventEmitter();
+  @Output() addTrendObserver: EventEmitter<TrendObserver> = new EventEmitter();
 
   public product: FormControl = new FormControl(null);
 
@@ -25,4 +27,13 @@ export class OrdersComponent implements OnInit {
     })
   }
 
+  observe(item: any) {
+    const observe: TrendObserver = {
+      product_id: item.product_id,
+      price: Number(item.price),
+      size: Number(item.size)
+    }
+
+    this.addTrendObserver.emit(observe);
+  }
 }

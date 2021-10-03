@@ -10,7 +10,7 @@ import {ReactiveFormsModule} from "@angular/forms";
 import {NgxChartsModule} from "@swimlane/ngx-charts"
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
-import {MaterialModule} from "./material.module";
+import {MaterialModule} from "../shared/material.module";
 import { GraphComponent } from './graph/graph.component'
 import { WalletComponent } from './wallet/wallet.component';
 import { SwapComponent } from './swap/swap.component';

@@ -13,7 +13,8 @@ export class WebsocketService {
 
   constructor() {
     const wsSubjectConfig = {
-      url: 'wss://ws-feed.pro.coinbase.com',
+      // url: 'wss://ws-feed.pro.coinbase.com',
+      url: 'wss://ws-feed.exchange.coinbase.com',
       // added this to the config object
       closeObserver: {
         // this is triggered when connection is closed

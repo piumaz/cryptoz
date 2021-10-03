@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {Ticker} from "../graph/graph.component";
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import {TrendObserver, Ticker} from "../interfaces";
 
 @Component({
   selector: 'app-trend-observer',
@@ -17,20 +17,21 @@ export class TrendObserverComponent implements OnInit {
     }
   }
 
+  @Input() observer: TrendObserver[] = [];
+
   @Input() currencies: any[] = [];
   @Input() products: any[] = [];
   @Input() accounts: any[] = [];
   @Input() orders: any[] = [];
   @Input() fills: any[] = [];
 
-  @Output() productAdded: EventEmitter<any> = new EventEmitter();
-  @Output() productRemoved: EventEmitter<any> = new EventEmitter();
+  @Output() added: EventEmitter<TrendObserver> = new EventEmitter();
+  @Output() removed: EventEmitter<number> = new EventEmitter();
+  @Output() addProductOnGraph: EventEmitter<string> = new EventEmitter();
 
   public prices: any = {};
 
   public form: FormGroup = new FormGroup({});
-
-  public observer: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -38,31 +39,18 @@ export class TrendObserverComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      product: [null, Validators.required],
+      product_id: [null, Validators.required],
       price: [null, Validators.required],
       size: [null],
     });
-
-    this.observer = this.getStorage().observer || [];
-
-    const products = this.observer.map(item => item.product.id);
-    const uniqueProducts = new Set(products);
-
-    uniqueProducts.forEach(productId => this.productAdded.emit(productId));
-
   }
 
   add() {
     const value = this.form.value;
-    this.observer.unshift(value);
 
-    const exist = this.observer.filter(item => item.product === value.product);
-    if (!exist.length) {
-      this.productAdded.emit(value.product);
-    }
+    this.added.emit(value);
 
     this.form.reset();
-    this.setStorage();
   }
 
   remove(index: number) {
@@ -70,14 +58,7 @@ export class TrendObserverComponent implements OnInit {
     if (!window.confirm(`Are you sure?`)) {
       return;
     }
-
-    const exist = this.observer.filter(item => item.product === this.observer[index].product);
-    if (!exist.length) {
-      this.productRemoved.emit(this.observer[index].product);
-    }
-
-    this.observer.splice(index, 1);
-    this.setStorage();
+    this.removed.emit(index);
   }
 
   oldFunds(item: any) {
@@ -85,7 +66,7 @@ export class TrendObserverComponent implements OnInit {
   }
 
   newFunds(item: any) {
-    return Number((this.prices[item.product.id] * item.size).toFixed(2));
+    return Number((this.prices[item.product_id] * item.size).toFixed(2));
   }
 
   earn(from: number, to: number) {
@@ -101,7 +82,7 @@ export class TrendObserverComponent implements OnInit {
 
   getPriceColor(item: any) {
 
-    const diff = this.diff(item.price, this.prices[item.product.id]);
+    const diff = this.diff(item.price, this.prices[item.product_id]);
     if (diff > 0) {
       return 'green';
     } else if (diff < 0) {
@@ -109,19 +90,6 @@ export class TrendObserverComponent implements OnInit {
     }
 
     return 'grey';
-  }
-
-  setStorage() {
-    const storage: any = {
-      observer: this.observer
-    }
-    localStorage.setItem('cryptoz.observer', JSON.stringify(storage));
-  }
-  getStorage(): any {
-    const storage = localStorage.getItem('cryptoz.observer') || '{}';
-    const storageValue: any = JSON.parse(storage);
-
-    return storageValue;
   }
 
 }

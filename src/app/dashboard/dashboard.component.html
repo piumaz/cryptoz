@@ -23,14 +23,16 @@
   <app-trend-observer
     class="block p-2 mb-4 shadow overflow-hidden rounded-lg flex-1"
     [USDEUR]="USDEUR"
+    [observer]="trendObserver"
     [ticker]="ticker$ | async"
     [products]="products$ | async"
     [accounts]="accounts$ | async"
     [currencies]="currencies$ | async"
     [orders]="orders$ | async"
     [fills]="fills$ | async"
-    (productAdded)="addProductTicker($event)"
-    (productRemoved)="removeProductTicker($event)"
+    (addProductOnGraph)="addProductOnGraph($event)"
+    (added)="addTrendObserver($event)"
+    (removed)="removeTrendObserver($event)"
   ></app-trend-observer>
 </div>
 
@@ -39,11 +41,12 @@
   <mat-tab label="Graph">
     <app-graph
       [USDEUR]="USDEUR"
+      [selected]="productsGraph"
       [ticker]="ticker$ | async"
       [products]="products$ | async"
       [accounts]="accounts$ | async"
-      (productAdded)="addProductTicker($event)"
-      (productRemoved)="removeProductTicker($event)"
+      (added)="addProductOnGraph($event)"
+      (removed)="removeProductOnGraph($event)"
       class="block mt-2"></app-graph>
   </mat-tab>
 
@@ -63,6 +66,7 @@
       [fills]="fills$ | async"
       [products]="products$ | async"
       (productSelected)="loadFills($event)"
+      (addTrendObserver)="addTrendObserver($event)"
       class="block mt-2"></app-orders>
   </mat-tab>
 

@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
@@ -9,33 +8,12 @@ import {
   Output,
   ViewChild
 } from '@angular/core';
-import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription} from "rxjs";
-import {filter, first, map, takeUntil, tap} from "rxjs/operators";
+import {interval, Subject, Subscription} from "rxjs";
 import {HttpClient} from "@angular/common/http";
-import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
-import {CoinbaseProService} from "../coinbase-pro.service";
+import {Account, Product, Ticker} from "../interfaces";
 
-export interface Ticker {
-  product_id: string;
-  price: number;
-  sequence: number;
-}
-
-/*
-{
-    "type": "ticker",
-    "trade_id": 20153558,
-    "sequence": 3262786978,
-    "time": "2017-09-02T17:05:49.250000Z",
-    "product_id": "BTC-USD",
-    "price": "4388.01000000",
-    "side": "buy", // Taker side
-    "last_size": "0.03000000",
-    "best_bid": "4388",
-    "best_ask": "4388.01"
-}
- */
 @Component({
   selector: 'app-graph',
   templateUrl: './graph.component.html',
@@ -46,17 +24,19 @@ export class GraphComponent implements OnInit, OnDestroy {
   @Input() USDEUR: number = 1;
 
   @Input() set ticker(ticker: Ticker) {
-    if (ticker && this.getSelectedManagedSymbols().includes(ticker.product_id)) {
+    if (ticker && this.selected.includes(ticker.product_id)) {
       this.addTicker(ticker);
       this.calculateData();
     }
   }
 
-  @Input() products: any[] = [];
-  @Input() accounts: any[] = [];
+  @Input() selected: string[] = [];
 
-  @Output() productAdded: EventEmitter<any> = new EventEmitter();
-  @Output() productRemoved: EventEmitter<any> = new EventEmitter();
+  @Input() products: Product[] = [];
+  @Input() accounts: Account[] = [];
+
+  @Output() added: EventEmitter<string> = new EventEmitter();
+  @Output() removed: EventEmitter<string> = new EventEmitter();
 
 
   public colorScheme = {
@@ -79,7 +59,6 @@ export class GraphComponent implements OnInit, OnDestroy {
   public history: any[] = [];
 
   public uiForm: FormGroup = new FormGroup({});
-  public controlCheckSymbol: FormControl = new FormControl(null);
 
   average: any = {};
   rate: any = {};
@@ -87,22 +66,16 @@ export class GraphComponent implements OnInit, OnDestroy {
   chartData: any[] = [];
 
   @ViewChild('symbolsInput') symbolsInput: ElementRef<HTMLInputElement> | undefined;
-  selectedSymbols: string[] = [];
 
   private intervalSub: Subscription = new Subscription();
   protected destroy$ = new Subject();
 
   constructor(
     private http: HttpClient,
-    private fb: FormBuilder,
-    private coinbaseProService: CoinbaseProService
+    private fb: FormBuilder
   ) {}
 
   ngOnInit(): void {
-
-    this.selectedSymbols = this.getStorage().selectedSymbols || [];
-    this.selectedSymbols.forEach(symbol => this.productAdded.emit(symbol));
-
     this.uiForm = this.fb.group({
       symbols: [null, Validators.required],
     });
@@ -117,7 +90,7 @@ export class GraphComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  getProductsId(): string[] {
+  getTickersProductsId(): string[] {
     return this.tickers ? Object.keys(this.tickers) : [];
   }
 
@@ -138,7 +111,7 @@ export class GraphComponent implements OnInit, OnDestroy {
 
   mergeTickers() {
     let item: any = {};
-    const productsId = this.getProductsId();
+    const productsId = this.getTickersProductsId();
     if (productsId.length) {
       productsId.forEach((productId: string) => {
         item[productId] = this.tickers[productId][0]
@@ -153,13 +126,14 @@ export class GraphComponent implements OnInit, OnDestroy {
         const first = this.history.pop();
         this.history.splice(limit, this.history.length-2, first);
       }
+
+      this.buildChartData();
     }
 
-    this.buildChartData();
   }
 
   calculateData() {
-    this.getProductsId().forEach((symbol: string) => {
+    this.getTickersProductsId().forEach((symbol: string) => {
       this.average[symbol] = this.getAverage(symbol);
       this.rate[symbol] = this.getRate(symbol);
     });
@@ -169,7 +143,7 @@ export class GraphComponent implements OnInit, OnDestroy {
 
     let chartData: any[] = [];
 
-    this.getProductsId().forEach((symbol: string) => {
+    this.getTickersProductsId().forEach((symbol: string) => {
 
       let data: any = {
         name: symbol,
@@ -178,7 +152,6 @@ export class GraphComponent implements OnInit, OnDestroy {
 
       const rows = [...this.history].reverse();
       let firstTicker = rows[0][symbol];
-      // console.log('symbol', symbol);
       rows.forEach((item: any, i: number) => {
 
         if(!item[symbol]) {
@@ -187,8 +160,6 @@ export class GraphComponent implements OnInit, OnDestroy {
         }
 
         const ticker = item[symbol];
-        // console.log('first', firstTicker);
-        // console.log('ticker', ticker);
 
         const itemSeries = {
           name: i,
@@ -241,28 +212,14 @@ export class GraphComponent implements OnInit, OnDestroy {
   }
 
   selectedManagedSymbol(event: MatAutocompleteSelectedEvent): void {
-    this.productAdded.emit(event.option.viewValue);
-    this.selectedSymbols.push(event.option.viewValue);
+    this.added.emit(event.option.viewValue);
     if (this.symbolsInput) {
-      // this.symbolsInput.nativeElement.value = '';
       this.uiForm.get('symbols')?.patchValue(null);
     }
-    this.setStorage();
-  }
-
-  getSelectedManagedSymbols() {
-    // unique vals
-    return [...new Set(this.selectedSymbols)];
   }
 
   removeSelectedManagedSymbols(symbol: string): void {
-    this.productRemoved.emit(symbol);
-
-    const index = this.selectedSymbols.indexOf(symbol);
-
-    if (index >= 0) {
-      this.selectedSymbols.splice(index, 1);
-    }
+    this.removed.emit(symbol);
 
     delete this.tickers[symbol];
 
@@ -274,22 +231,12 @@ export class GraphComponent implements OnInit, OnDestroy {
     this.chartData = this.chartData.filter((item) => {
       return item.name !== symbol;
     });
-
-    this.setStorage();
   }
 
   getFilteresManagedSymbols(): any[] {
-    return this.getManagedSymbols()?.filter((item: any) => {
+    return this.products.filter((item: any) => {
       return item.id.toLowerCase().includes(this.uiForm.get('symbols')?.value?.toLowerCase());
     });
-  }
-
-  getManagedSymbols(): any[] {
-    return this.products.filter(
-      (item) => ['USDT','EUR'].includes(item.quote_currency)
-    ).sort(
-      (a: any, b: any) => a.id.localeCompare(b.id)
-    );
   }
 
   getPriceColor(price: number, next: number) {
@@ -314,18 +261,4 @@ export class GraphComponent implements OnInit, OnDestroy {
     return to === 'USDT' ? price : price * this.USDEUR;
 
   }
-
-  setStorage() {
-    const storage: any = {
-      selectedSymbols: this.selectedSymbols
-    }
-    localStorage.setItem('cryptoz.graph', JSON.stringify(storage));
-  }
-  getStorage(): any {
-    const storage = localStorage.getItem('cryptoz.graph') || '{}';
-    const storageValue: any = JSON.parse(storage);
-
-    return storageValue;
-  }
-
 }

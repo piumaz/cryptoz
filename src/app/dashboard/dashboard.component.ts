@@ -7,6 +7,7 @@ import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 import {CoinbaseProService} from "../coinbase-pro.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {WebsocketService} from "../websocket.service";
+import {TrendObserver} from "../interfaces";
 
 
 @Component({
@@ -19,13 +20,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public USDEUR: number = 1;
 
   public productsTicker: string[] = [];
+  public productsGraph: string[] = [];
+  public trendObserver: TrendObserver[] = [];
 
   public currencies$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public products$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public accounts$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public orders$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public fills$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
-  public prices$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public ticker$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   private intervalSub: Subscription = new Subscription();
@@ -45,15 +47,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
 
+    const storage = this.getStorage();
+    this.productsGraph = storage.productsGraph || [];
+    this.trendObserver = storage.trendObserver || [];
+    this.productsTicker = storage.productsTicker || [];
+    this.subscribeWsTickers(this.productsTicker);
+
     this.loadCurrencies();
     this.loadProducts();
     this.loadAccounts();
     this.loadOrders();
 
     this.loadTickers();
-/*    this.intervalSub = interval(this.intervalMinutes * 60 * 1000).subscribe((x: number) => {
-      this.loadPrices();
-    });*/
   }
 
   ngOnDestroy(): void {
@@ -62,9 +67,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.intervalSub.unsubscribe();
   }
 
+  addProductOnGraph(productId: string) {
+    if (!this.productsGraph.includes(productId)) {
+      this.productsGraph.push(productId);
+      this.addProductTicker(productId);
+    }
+  }
+  removeProductOnGraph(productId: string) {
+    const index = this.productsGraph.indexOf(productId);
+    if (index >= 0) {
+      this.productsGraph.splice(index, 1);
+      this.removeProductTicker(productId);
+    }
+  }
+
+  addTrendObserver(item: any) {
+    this.trendObserver.unshift(item);
+    this.addProductTicker(item.product_id);
+  }
+  removeTrendObserver(index: number) {
+    const item = this.trendObserver.splice(index, 1)[0];
+    this.removeProductTicker(item.product_id);
+  }
+
   addProductTicker(productId: string) {
-    this.productsTicker.push(productId);
-    this.subscribeWsTickers([productId]);
+    if (!this.productsTicker.includes(productId)) {
+      this.productsTicker.push(productId);
+      this.subscribeWsTickers([productId]);
+    }
   }
 
   removeProductTicker(productId: string) {
@@ -79,6 +109,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   subscribeWsTickers(productIds: string[]) {
+    if (!productIds.length) return;
+
     this.wsService.send({
       "type": "subscribe",
       "product_ids": productIds,
@@ -120,6 +152,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
           this.ticker$.next(v);
         }
+
+        if (v.type === 'subscriptions') {
+          const tickerChannel = v.channels.filter((item: any) => item.name === 'ticker');
+          if (tickerChannel[0]) {
+            this.productsTicker = tickerChannel[0].product_ids;
+          }
+        }
+
+        // it's a good place
+        this.setStorage();
+
       }
     );
   }
@@ -158,7 +201,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadFills(product: any) {
-    this.coinbaseProService.getFills({product_id: product.id}).subscribe(
+    this.coinbaseProService.getFills({product_id: product.id, limit: 10}).subscribe(
       result => this.fills$.next(result),
       err => this.fills$.error(err)
     );
@@ -398,5 +441,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   }
 */
+
+  setStorage() {
+    const storage: any = {
+      trendObserver: this.trendObserver,
+      productsGraph: this.productsGraph,
+      productsTicker: this.productsTicker
+    }
+    localStorage.setItem('cryptoz.storage', JSON.stringify(storage));
+  }
+  getStorage(): any {
+    const storage = localStorage.getItem('cryptoz.storage') || '{}';
+    const storageValue: any = JSON.parse(storage);
+
+    return storageValue;
+  }
 
 }

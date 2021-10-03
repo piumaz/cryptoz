@@ -1,7 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {map} from "rxjs/operators";
-import {Ticker} from "../graph/graph.component";
 
 @Component({
   selector: 'app-swap',

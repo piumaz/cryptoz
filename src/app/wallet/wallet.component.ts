@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {Ticker} from "../graph/graph.component";
+import {Account, Currency, Ticker} from "../interfaces";
 
 @Component({
   selector: 'app-wallet',
@@ -9,8 +9,8 @@ import {Ticker} from "../graph/graph.component";
 export class WalletComponent implements OnInit {
 
   @Input() USDEUR: number = 1;
-  @Input() accounts: any[] = [];
-  @Input() currencies: any[] = [];
+  @Input() accounts: Account[] = [];
+  @Input() currencies: Currency[] = [];
 
   @Input() set ticker(value: Ticker) {
     if (value) {

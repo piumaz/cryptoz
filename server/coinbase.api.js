@@ -12,7 +12,8 @@ const CBAUTH = {
 */
 
 // const API_SERVICE_URL = "https://api-public.sandbox.pro.coinbase.com";
-const API_SERVICE_URL = "https://api.pro.coinbase.com";
+// const API_SERVICE_URL = "https://api.pro.coinbase.com";
+const API_SERVICE_URL = "https://api.exchange.coinbase.com";
 
 router.use(function (req, res, next) {
 

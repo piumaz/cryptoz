@@ -3,9 +3,9 @@
   <div class="flex flex-row justify-between place-items-stretch gap-2 items-start">
     <div class="flex-grow">
       <label>Product:</label>
-      <select formControlName="product" class="w-full">
+      <select formControlName="product_id" class="w-full">
         <option [ngValue]="null">...</option>
-        <option *ngFor="let item of products" [ngValue]="item">
+        <option *ngFor="let item of products" [ngValue]="item.id">
           {{item.id}}
         </option>
       </select>
@@ -37,7 +37,7 @@
 <tbody class="divide-y divide-gray-200">
   <tr *ngFor="let item of observer; let i = index">
     <td class="px-0">
-      <strong class="text-primary">{{item.product.id}}</strong>
+      <strong class="text-primary">{{item.product_id}}</strong>
       <div *ngIf="item.size">
         <small>{{item.size}}</small>
       </div>
@@ -49,18 +49,21 @@
       </div>
     </td>
     <td class="px-2 text-right bg-indigo-50">
-      {{prices[item.product.id]}}
+      {{prices[item.product_id]}}
       <div *ngIf="item.size">
         <small>{{newFunds(item)}}</small>
       </div>
     </td>
     <td  class="px-2 text-right" [style.color]="getPriceColor(item)">
-      <strong>{{diff(item.price, prices[item.product.id])}}% ({{earn(item.price, prices[item.product.id])}})</strong><br>
+      <strong>{{diff(item.price, prices[item.product_id])}}% ({{earn(item.price, prices[item.product_id])}})</strong><br>
       <div *ngIf="item.size">
         <small>{{earn(oldFunds(item), newFunds(item))}}</small>
       </div>
     </td>
     <td class="px-0 text-right">
+      <button mat-icon-button color="accent" (click)="addProductOnGraph.emit(item.product_id)">
+        <mat-icon>trending_up</mat-icon>
+      </button>
       <button mat-icon-button color="warn" (click)="remove(i)">
         <mat-icon>remove_circle_outline</mat-icon>
       </button>
