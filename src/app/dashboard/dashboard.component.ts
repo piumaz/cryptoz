@@ -59,6 +59,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadOrders();
 
     this.loadTickers();
+
+    //this.coinbaseProService.getProductStats('BTC-USDT').subscribe();
   }
 
   ngOnDestroy(): void {

@@ -103,4 +103,7 @@ export class CoinbaseProService {
   getProductTicker(productId: string) {
     return this.http.get(`${this.api}/products/${productId}/ticker`);
   }
+  getProductStats(productId: string) {
+    return this.http.get(`${this.api}/products/${productId}/stats`);
+  }
 }
