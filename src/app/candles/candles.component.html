@@ -1,0 +1,16 @@
+<div class="my-2">
+  <mat-chip *ngFor="let symbol of selected" (click)="show(symbol)">
+    {{symbol}}
+  </mat-chip>
+</div>
+
+<ng-container *ngIf="showSeries">
+
+  <apx-chart #chart
+    [series]="showSeries"
+    [chart]="options.chart"
+    [xaxis]="options.xaxis"
+    [title]="options.title" [legend]="{show:false}"
+  ></apx-chart>
+
+</ng-container>

@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 import {AppRoutingModule} from "./app-routing.module";
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { ChartsComponent } from './charts/charts.component';
+import { ChartsComponent } from './graph/charts/charts.component';
 import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
 import {ReactiveFormsModule} from "@angular/forms";
 import {NgxChartsModule} from "@swimlane/ngx-charts"
@@ -23,6 +23,8 @@ import {registerLocaleData} from "@angular/common";
 registerLocaleData(localeIt, 'it-IT', localeItExtra);
 
 import {TokenInterceptor} from "./token-interceptor";
+import {NgApexchartsModule} from "ng-apexcharts";
+import { CandlesComponent } from './candles/candles.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +35,8 @@ import {TokenInterceptor} from "./token-interceptor";
     WalletComponent,
     SwapComponent,
     OrdersComponent,
-    TrendObserverComponent
+    TrendObserverComponent,
+    CandlesComponent
   ],
   imports: [
     BrowserModule,
@@ -42,7 +45,8 @@ import {TokenInterceptor} from "./token-interceptor";
     HttpClientModule,
     ReactiveFormsModule,
     NgxChartsModule,
-    MaterialModule
+    MaterialModule,
+    NgApexchartsModule
   ],
   providers: [
     {provide: LOCALE_ID, useValue: 'it-IT' },

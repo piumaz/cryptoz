@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {TrendObserver, Ticker} from "../interfaces";
+import {UtilsService} from "../utils.service";
 
 @Component({
   selector: 'app-trend-observer',
@@ -35,6 +36,7 @@ export class TrendObserverComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+    public utils: UtilsService,
   ) { }
 
   ngOnInit(): void {
@@ -73,23 +75,9 @@ export class TrendObserverComponent implements OnInit {
     return Number((to - from).toFixed(2));
   }
 
-  diff(from: number, to: number) {
-    if (!to) {
-      to = from;
-    }
-    return Number((((to - from) / to) * 100).toFixed(2));
-  }
-
   getPriceColor(item: any) {
-
-    const diff = this.diff(item.price, this.prices[item.product_id]);
-    if (diff > 0) {
-      return 'green';
-    } else if (diff < 0) {
-      return 'red';
-    }
-
-    return 'grey';
+    const diff = this.utils.diff(this.prices[item.product_id], item.price, 2);
+    return this.utils.getColor(diff, 0);
   }
 
 }

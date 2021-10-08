@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription} from "rxjs";
+import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription, timer} from "rxjs";
 import {filter, finalize, map, mergeMap, retry, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
@@ -8,6 +8,7 @@ import {CoinbaseProService} from "../coinbase-pro.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {WebsocketService} from "../websocket.service";
 import {TrendObserver} from "../interfaces";
+import {UtilsService} from "../utils.service";
 
 
 @Component({
@@ -29,6 +30,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public orders$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public fills$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public ticker$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  public candles$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   private intervalSub: Subscription = new Subscription();
 
@@ -42,7 +44,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private coinbaseProService: CoinbaseProService,
     private wsService: WebsocketService,
-    private notify: MatSnackBar
+    private notify: MatSnackBar,
+    private utils: UtilsService
   ) {}
 
   ngOnInit(): void {
@@ -51,7 +54,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.productsGraph = storage.productsGraph || [];
     this.trendObserver = storage.trendObserver || [];
     this.productsTicker = storage.productsTicker || [];
-    this.subscribeWsTickers(this.productsTicker);
+    this.subscribeWsTickers([
+      ...this.productsTicker,
+      ...this.productsGraph
+    ]);
 
     this.loadCurrencies();
     this.loadProducts();
@@ -60,7 +66,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.loadTickers();
 
-    //this.coinbaseProService.getProductStats('BTC-USDT').subscribe();
+
+    this.intervalSub = timer(0, 60000).subscribe((x: number) => {
+
+      //this.utils.beep();
+      this.productsGraph.forEach(productId => this.loadCandles(productId));
+
+    });
+  }
+
+  loadCandles(productId: string) {
+    /*
+    time bucket start time
+    low lowest price during the bucket interval
+    high highest price during the bucket interval
+    open opening price (first trade) in the bucket interval
+    close closing price (last trade) in the bucket interval
+    volume volume of trading activity during the bucket interval
+    */
+    this.coinbaseProService.getProductCandles(productId, {
+      granularity: 60,
+      start: new Date(Date.now()+1).toUTCString()
+    }).pipe(
+      map((v: any[]) => {
+
+        return v.map(item => {
+          const [time, low, high, open, close, volume] = item;
+          //[Timestamp, O, H, L, C]
+          const d = new Date(time * 1000);
+          const b = d.getTimezoneOffset() * 60 * 1000;
+          return [d.valueOf() - b, open, high, low, close];
+        });
+
+      })
+    ).subscribe(
+      result => this.candles$.next({
+        name: productId,
+        data: result
+      }),
+      err => this.candles$.error(err)
+    );
   }
 
   ngOnDestroy(): void {
@@ -260,27 +305,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return accounts.length ? accounts[0] : null;
   }
 
-  isRightSize(product: any, size: number) {
-    return size > product.base_min_size && size < product.base_max_size;
-  }
-  isRightFunds(product: any, funds: number) {
-    return funds > product.min_market_funds && funds < product.max_market_funds;
-  }
-
-  isRightIncrementSize(product: any, size: number) {
-    return Math.round(size / product.base_increment) / (1 / product.base_increment) === size;
-  }
-  isRightIncrementFunds(product: any, funds: number) {
-    return Math.round(funds / product.quote_increment) / (1 / product.quote_increment) === funds;
-  }
-
-  getSizeIncrement(product: any, size: number) {
-    return Math.round(size / product.base_increment) / (1 / product.base_increment);
-  }
-  getFundsIncrement(product: any, funds: number) {
-    return Math.round(funds / product.quote_increment) / (1 / product.quote_increment);
-  }
-
   swap($event: any) {
 
     const sellProduct = $event.sellProduct;
@@ -320,7 +344,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         console.log('accountAvailable', accountAvailable);
 
         let funds = accountAvailable - accountPrevAvailable;
-        funds = this.getFundsIncrement(buyProduct, funds);
+        funds = this.utils.getFundsIncrement(buyProduct, funds);
 
         this.coinbaseProService.buyMarket(buyProduct.id, {funds: funds}).pipe(
           finalize(() => {

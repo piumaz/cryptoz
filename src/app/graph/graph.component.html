@@ -32,6 +32,7 @@
 </div>
 
 <div *ngIf="chartData.length" class="rounded-lg ring-1 ring-gray-900 ring-opacity-5 my-4">
+
   <app-charts style="height:300px"
     type="line"
     legendPosition="right"
@@ -65,20 +66,20 @@
         </th>
       </tr>
     </thead>
-
+<!--
     <tbody class="divide-y divide-gray-200">
       <tr *ngFor="let item of history.slice(0, 10); let i = index">
         <td *ngFor="let currency of getTickersProductsId()" class="p-2 whitespace-nowrap text-right text-xs">
 
           <ng-container *ngIf="item[currency] && item[currency].price">
-            <span class="price" [style.color]="getPriceColor(item[currency].price, history[i+1] && history[i+1][currency] ? history[i+1][currency].price : item[currency].price)">
-              <ng-container [ngSwitch]="getPriceColor(item[currency].price, history[i+1] && history[i+1][currency]? history[i+1][currency].price : item[currency].price)">
+            <span class="price" [style.color]="utils.getColor(item[currency].price, history[i+1] && history[i+1][currency] ? history[i+1][currency].price : item[currency].price)">
+              <ng-container [ngSwitch]="utils.getColor(item[currency].price, history[i+1] && history[i+1][currency]? history[i+1][currency].price : item[currency].price)">
                 <mat-icon *ngSwitchCase="'red'">arrow_downward</mat-icon>
                 <mat-icon *ngSwitchCase="'green'">arrow_upward</mat-icon>
               </ng-container>
               <span>
-                {{getPrice(item[currency].price, currency, 'USDT') | currency : 'USD'}}<br>
-                {{getPrice(item[currency].price, currency, 'EUR') | currency : 'EUR'}}
+                {{getPrice(item[currency].price, currency, 'USDT')}}$<br>
+                {{getPrice(item[currency].price, currency, 'EUR')}}€
               </span>
             </span>
           </ng-container>
@@ -86,6 +87,8 @@
         </td>
       </tr>
     </tbody>
+    -->
   </table>
 
 </div>
+

@@ -39,6 +39,11 @@
 <mat-tab-group dynamicHeight color="primary" class="pb-10">
 
   <mat-tab label="Graph">
+    <app-candles
+      [candles]="candles$ | async"
+      [selected]="productsGraph"
+    ></app-candles>
+
     <app-graph
       [USDEUR]="USDEUR"
       [selected]="productsGraph"

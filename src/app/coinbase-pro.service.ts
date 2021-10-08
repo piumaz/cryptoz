@@ -6,9 +6,16 @@ export interface OrdersMarketParams {
   size?: number;
   funds?: number;
 }
+
 export interface OrdersLimitParams {
   price: number;
   size: number;
+}
+
+export interface CandlesParams {
+  granularity: number;
+  start: any;
+  end: number;
 }
 
 @Injectable({
@@ -97,13 +104,20 @@ export class CoinbaseProService {
   getProducts() {
     return this.http.get(`${this.api}/products`);
   }
+
   getProduct(productId: string) {
     return this.http.get(`${this.api}/products/${productId}`);
   }
+
   getProductTicker(productId: string) {
     return this.http.get(`${this.api}/products/${productId}/ticker`);
   }
+
   getProductStats(productId: string) {
     return this.http.get(`${this.api}/products/${productId}/stats`);
+  }
+
+  getProductCandles(productId: string, params: Partial<CandlesParams>) {
+    return this.http.get<any[]>(`${this.api}/products/${productId}/candles`, {params: params});
   }
 }

@@ -1,4 +1,8 @@
 
+export interface Candle {
+
+}
+
 export interface TrendObserver {
   product_id: string;
   price: number;
@@ -7,15 +11,23 @@ export interface TrendObserver {
 
 export interface Ticker {
   product_id: string;
-  price: number;
   sequence: number;
   type: string;
   trade_id: number;
   time: Date;
   side: string;
+
+  price: number;
   last_size: number;
   best_bid: number;
   best_ask: number;
+
+  open_24h: number;
+  high_24h: number;
+  low_24h: number;
+
+  volume_24h: number;
+  volume_30d: number;
 }
 
 export interface Fill {

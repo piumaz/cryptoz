@@ -13,6 +13,7 @@ import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 import {Account, Product, Ticker} from "../interfaces";
+import {UtilsService} from "../utils.service";
 
 @Component({
   selector: 'app-graph',
@@ -32,12 +33,13 @@ export class GraphComponent implements OnInit, OnDestroy {
 
   @Input() selected: string[] = [];
 
+
   @Input() products: Product[] = [];
   @Input() accounts: Account[] = [];
 
   @Output() added: EventEmitter<string> = new EventEmitter();
   @Output() removed: EventEmitter<string> = new EventEmitter();
-
+  @Output() openCandles: EventEmitter<string> = new EventEmitter();
 
   public colorScheme = {
     domain: [
@@ -72,7 +74,8 @@ export class GraphComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    public utils: UtilsService
   ) {}
 
   ngOnInit(): void {
@@ -163,7 +166,7 @@ export class GraphComponent implements OnInit, OnDestroy {
 
         const itemSeries = {
           name: i,
-          value: this.diff(ticker.price, firstTicker.price),
+          value: this.utils.diff(ticker.price, firstTicker.price),
           price: ticker.price
         };
 
@@ -201,14 +204,7 @@ export class GraphComponent implements OnInit, OnDestroy {
     const first = history[0];
     const last = history[history.length - 1];
 
-    return this.diff(first.price, last.price);
-  }
-
-  diff(from: number, to: number) {
-    if (!to) {
-      to = from;
-    }
-    return (((from - to) / from) * 100).toFixed(3);
+    return this.utils.diff(first.price, last.price);
   }
 
   selectedManagedSymbol(event: MatAutocompleteSelectedEvent): void {
@@ -235,30 +231,28 @@ export class GraphComponent implements OnInit, OnDestroy {
 
   getFilteresManagedSymbols(): any[] {
     return this.products.filter((item: any) => {
-      return item.id.toLowerCase().includes(this.uiForm.get('symbols')?.value?.toLowerCase());
+      return item.id.toLowerCase().includes(this.uiForm.get('symbols')?.value?.toLowerCase())
+        && !this.selected.includes(item.id);
     });
   }
 
-  getPriceColor(price: number, next: number) {
-
-    if (price > next) {
-      return 'green';
-    } else if (price < next) {
-      return 'red';
-    }
-
-    return 'grey';
+  getProductById(id: string): Product {
+    return this.products.filter(item => item.id === id)[0];
   }
 
   getPrice(price: number, productId: string, to: 'EUR' | 'USDT') {
 
-    const currency = productId.split('-')[1];
+    const product = this.getProductById(productId);
+    if (!product) return 0;
 
-    if (currency === 'EUR') {
-      return to === 'EUR' ? price : price / this.USDEUR;
+    if (product.quote_currency === 'EUR') {
+      price = (to === 'EUR') ? price : price / this.USDEUR;
     }
 
-    return to === 'USDT' ? price : price * this.USDEUR;
+    if (product.quote_currency === 'USDT') {
+      price = (to === 'USDT') ? price : price * this.USDEUR;
+    }
 
+    return this.utils.getFundsIncrement(product, price);
   }
 }

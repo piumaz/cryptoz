@@ -55,7 +55,7 @@
       </div>
     </td>
     <td  class="px-2 text-right" [style.color]="getPriceColor(item)">
-      <strong>{{diff(item.price, prices[item.product_id])}}% ({{earn(item.price, prices[item.product_id])}})</strong><br>
+      <strong>{{utils.diff(prices[item.product_id], item.price)}}% ({{earn(item.price, prices[item.product_id])}})</strong><br>
       <div *ngIf="item.size">
         <small>{{earn(oldFunds(item), newFunds(item))}}</small>
       </div>
