@@ -7,7 +7,7 @@ import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 import {CoinbaseProService} from "../coinbase-pro.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {WebsocketService} from "../websocket.service";
-import {TrendObserver} from "../interfaces";
+import {Alert, TrendObserver} from "../interfaces";
 import {UtilsService} from "../utils.service";
 
 
@@ -23,6 +23,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public productsTicker: string[] = [];
   public productsGraph: string[] = [];
   public trendObserver: TrendObserver[] = [];
+  public alerts: Alert[] = [];
 
   public currencies$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public products$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
@@ -53,6 +54,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const storage = this.getStorage();
     this.productsGraph = storage.productsGraph || [];
     this.trendObserver = storage.trendObserver || [];
+    this.alerts = storage.alerts || [];
     this.productsTicker = storage.productsTicker || [];
     this.subscribeWsTickers([
       ...this.productsTicker,
@@ -126,6 +128,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.productsGraph.splice(index, 1);
       this.removeProductTicker(productId);
     }
+  }
+
+  addAlert(item: any) {
+    this.alerts.unshift(item);
+    this.addProductTicker(item.product_id);
+  }
+  removeAlert(index: number) {
+    const item = this.alerts.splice(index, 1)[0];
+    this.removeProductTicker(item.product_id);
   }
 
   addTrendObserver(item: any) {
@@ -471,6 +482,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   setStorage() {
     const storage: any = {
       trendObserver: this.trendObserver,
+      alerts: this.alerts,
       productsGraph: this.productsGraph,
       productsTicker: this.productsTicker
     }

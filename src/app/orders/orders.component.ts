@@ -15,7 +15,7 @@ export class OrdersComponent implements OnInit {
   @Input() products: any[] = [];
 
   @Output() productSelected: EventEmitter<Product> = new EventEmitter();
-  @Output() addTrendObserver: EventEmitter<TrendObserver> = new EventEmitter();
+  @Output() addTrendObserver: EventEmitter<Partial<TrendObserver>> = new EventEmitter();
 
   public product: FormControl = new FormControl(null);
 
@@ -28,7 +28,7 @@ export class OrdersComponent implements OnInit {
   }
 
   observe(item: any) {
-    const observe: TrendObserver = {
+    const observe: Partial<TrendObserver> = {
       product_id: item.product_id,
       price: Number(item.price),
       size: Number(item.size)

@@ -3,10 +3,20 @@ export interface Candle {
 
 }
 
+export interface Alert {
+  product_id: string;
+  up: number;
+  down: number;
+  activated: boolean;
+  paused: boolean;
+}
+
 export interface TrendObserver {
   product_id: string;
   price: number;
   size: number;
+  alertUp: number;
+  alertDown: number;
 }
 
 export interface Ticker {

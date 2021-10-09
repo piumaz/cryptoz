@@ -6,7 +6,7 @@ import {AppRoutingModule} from "./app-routing.module";
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { ChartsComponent } from './graph/charts/charts.component';
 import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
-import {ReactiveFormsModule} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {NgxChartsModule} from "@swimlane/ngx-charts"
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
@@ -25,6 +25,7 @@ registerLocaleData(localeIt, 'it-IT', localeItExtra);
 import {TokenInterceptor} from "./token-interceptor";
 import {NgApexchartsModule} from "ng-apexcharts";
 import { CandlesComponent } from './candles/candles.component';
+import { AlertsComponent } from './alerts/alerts.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { CandlesComponent } from './candles/candles.component';
     SwapComponent,
     OrdersComponent,
     TrendObserverComponent,
-    CandlesComponent
+    CandlesComponent,
+    AlertsComponent
   ],
   imports: [
     BrowserModule,
@@ -44,6 +46,7 @@ import { CandlesComponent } from './candles/candles.component';
     AppRoutingModule,
     HttpClientModule,
     ReactiveFormsModule,
+    FormsModule,
     NgxChartsModule,
     MaterialModule,
     NgApexchartsModule

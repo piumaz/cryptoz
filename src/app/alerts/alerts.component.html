@@ -1,0 +1,93 @@
+<form [formGroup]="form" class="mb-2 pb-2 border-b">
+
+  <div class="flex flex-row justify-between place-items-stretch gap-2 items-start">
+    <div class="flex-grow">
+      <label>Product:</label>
+      <select formControlName="product_id" class="w-full">
+        <option [ngValue]="null">...</option>
+        <option *ngFor="let item of products" [ngValue]="item.id">
+          {{item.id}}
+        </option>
+      </select>
+    </div>
+
+    <div class="flex-shrink">
+      <label>Up:</label>
+      <input type="text" formControlName="up" class="w-full">
+    </div>
+    <div class="flex-shrink">
+      <label>Down:</label>
+      <input type="text" formControlName="down" class="w-full">
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button mat-icon-button color="primary"
+              [disabled]="form.invalid"
+              (click)="add()">
+        <mat-icon>add_circle</mat-icon>
+      </button>
+    </div>
+  </div>
+
+</form>
+
+
+<table class="border-collapse bg-transparent min-w-full divide-y divide-gray-200 text-xs">
+  <tbody class="divide-y divide-gray-200">
+  <tr *ngFor="let item of alerts; let i = index" [class.alert-activated]="item.activated ? true : false">
+    <td class="px-0">
+      <strong class="text-primary">{{item.product_id}}</strong>
+      <mat-icon inline class="mx-2 animate-ping" *ngIf="item.activated" color="warn">notifications_active</mat-icon>
+      <div>
+        <small>{{prices[item.product_id]}}</small>
+      </div>
+    </td>
+    <td class="px-2 text-right" [class.animate-bounce]="isUp(item)" [style.color]="isUp(item) ? 'green': 'initial'">
+      <mat-icon inline *ngIf="isUp(item)">keyboard_arrow_up</mat-icon> {{item.up}}
+    </td>
+    <td class="px-2 text-right" [class.animate-bounce]="isDown(item)" [style.color]="isDown(item) ? 'red': 'initial'">
+      <mat-icon inline *ngIf="isDown(item)">keyboard_arrow_down</mat-icon> {{item.down}}
+    </td>
+    <td class="px-0 text-center">
+      <mat-checkbox [(ngModel)]="item.paused"></mat-checkbox>
+    </td>
+    <td class="px-0 text-right">
+      <button mat-icon-button color="warn" (click)="remove(i)">
+        <mat-icon>remove_circle_outline</mat-icon>
+      </button>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+
+<!--
+<ng-container *ngFor="let item of alerts; let i = index">
+
+  <div class="flex flex-row border p-2 rounded-md text-xs" [class.alert-activated]="item.activated">
+    <div class="text-primary font-bold">
+      {{item.product_id}}
+    </div>
+    <div>
+
+      <div class="flex flex-row" [class.alert-activated]="item.activated">
+        <div>{{item.up}}</div>
+        <mat-icon>keyboard_arrow_up</mat-icon>
+        <div>
+          {{prices[item.product_id]}}
+        </div>
+        <mat-icon>keyboard_arrow_down</mat-icon>
+        <div>{{item.down}}</div>
+      </div>
+
+    </div>
+    <div>
+      <mat-checkbox [(ngModel)]="item.paused"></mat-checkbox>
+    </div>
+  </div>
+
+
+
+
+</ng-container>
+-->

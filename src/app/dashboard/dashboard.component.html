@@ -34,6 +34,17 @@
     (added)="addTrendObserver($event)"
     (removed)="removeTrendObserver($event)"
   ></app-trend-observer>
+
+  <app-alerts
+    class="block p-2 mb-4 shadow overflow-hidden rounded-lg flex-1"
+    [USDEUR]="USDEUR"
+    [alerts]="alerts"
+    (alertsChange)="alerts = $event"
+    [ticker]="ticker$ | async"
+    [products]="products$ | async"
+    (added)="addAlert($event)"
+    (removed)="removeAlert($event)"
+  ></app-alerts>
 </div>
 
 <mat-tab-group dynamicHeight color="primary" class="pb-10">

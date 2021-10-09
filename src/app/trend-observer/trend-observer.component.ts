@@ -43,7 +43,7 @@ export class TrendObserverComponent implements OnInit {
     this.form = this.fb.group({
       product_id: [null, Validators.required],
       price: [null, Validators.required],
-      size: [null],
+      size: [null]
     });
   }
 
@@ -79,5 +79,4 @@ export class TrendObserverComponent implements OnInit {
     const diff = this.utils.diff(this.prices[item.product_id], item.price, 2);
     return this.utils.getColor(diff, 0);
   }
-
 }

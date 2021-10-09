@@ -157,7 +157,7 @@ button {
 }
 
 label {
-  @apply block mb-2 text-sm font-semibold;
+  @apply block text-sm font-semibold;
 }
 
 input[type="submit"], input[type="button"], input[type="reset"] {
@@ -175,4 +175,14 @@ figure {
   figcaption {
     @apply block p-3 text-center text-sm;
   }
+}
+
+@keyframes alert-activated {
+  from {transform: scale(1);}
+  to {transform: scale(1.2);}
+}
+.alert-activated .font-bold {
+  transition: all;
+  transform-origin: center;
+  animation: alert-activated 0.5s ease-in-out infinite;
 }
