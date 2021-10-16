@@ -26,6 +26,8 @@ import {TokenInterceptor} from "./token-interceptor";
 import {NgApexchartsModule} from "ng-apexcharts";
 import { CandlesComponent } from './candles/candles.component';
 import { AlertsComponent } from './alerts/alerts.component';
+import { PercentageComponent } from './percentage/percentage.component';
+import { TickersComponent } from './tickers/tickers.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +40,10 @@ import { AlertsComponent } from './alerts/alerts.component';
     OrdersComponent,
     TrendObserverComponent,
     CandlesComponent,
-    AlertsComponent
+    AlertsComponent,
+    PercentageComponent,
+    PercentageComponent,
+    TickersComponent
   ],
   imports: [
     BrowserModule,

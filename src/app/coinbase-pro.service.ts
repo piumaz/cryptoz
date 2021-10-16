@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {map} from "rxjs/operators";
+import {UtilsService} from "./utils.service";
 
 export interface OrdersMarketParams {
   size?: number;
@@ -15,7 +16,7 @@ export interface OrdersLimitParams {
 export interface CandlesParams {
   granularity: number;
   start: any;
-  end: number;
+  end: any;
 }
 
 @Injectable({
@@ -26,7 +27,9 @@ export class CoinbaseProService {
   private api = 'http://localhost:3000/coinbase';
   // private api = "https://api.pro.coinbase.com";
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private utils: UtilsService) { }
 
 
   getFees() {
@@ -118,6 +121,15 @@ export class CoinbaseProService {
   }
 
   getProductCandles(productId: string, params: Partial<CandlesParams>) {
-    return this.http.get<any[]>(`${this.api}/products/${productId}/candles`, {params: params});
+    return this.http.get<any[]>(`${this.api}/products/${productId}/candles`, {params: params}).pipe(
+      map(results => {
+        return results.map(item => {
+          const [time, low, high, open, close] = item;
+          const timestamp = this.utils.timeOffset(time);
+          //[Timestamp, O, H, L, C]
+          return [timestamp , open, high, low, close];
+        })
+      })
+    );
   }
 }

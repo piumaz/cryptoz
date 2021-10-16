@@ -3,6 +3,8 @@ import {Alert, Ticker, TrendObserver} from "../interfaces";
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {UtilsService} from "../utils.service";
 import {isNumeric} from "rxjs/internal-compatibility";
+import {from, of} from "rxjs";
+import {debounceTime, delay, filter, map, tap} from "rxjs/operators";
 
 @Component({
   selector: 'app-alerts',
@@ -30,6 +32,7 @@ export class AlertsComponent implements OnInit {
 
   public prices: any = {};
   public paused: number[] = [];
+  public timeAlert: any;
 
   public form: FormGroup = new FormGroup({});
 
@@ -84,19 +87,39 @@ export class AlertsComponent implements OnInit {
 
   alert(ticker: Ticker) {
 
-    this.alerts.map(alert => {
+    from(this.alerts).pipe(
+      filter(v => v.product_id === ticker.product_id),
+      //tap(v => console.log(v)),
+      map(alert => {
+        if (alert.activated = this.isActivated(alert, ticker)) {
+          if (!alert.paused){
+            if (this.isUp(alert)) this.utils.beepPositive().then().catch();
+            if (this.isDown(alert)) this.utils.beepNegative().then().catch();
+          }
+        }
+
+      }),
+      debounceTime(1000),
+    ).subscribe();
+/*
+
+    this.alerts.forEach(alert => {
       if (alert.product_id !== ticker.product_id) {
         return alert;
       }
 
       if (alert.activated = this.isActivated(alert, ticker)) {
         if (!alert.paused){
-          this.utils.beep();
+            this.utils.sleep(1000).then(() => {
+              if (this.isUp(alert)) this.utils.beepPositive().then().catch();
+              if (this.isDown(alert)) this.utils.beepNegative().then().catch();
+            });
         }
       }
 
       return alert;
     });
+*/
 
     //this.updated.emit(this.alerts);
   }

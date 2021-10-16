@@ -12,8 +12,9 @@ import {interval, Subject, Subscription} from "rxjs";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
-import {Account, Product, Ticker} from "../interfaces";
+import {Account, Candle, Periods, Product, Ticker} from "../interfaces";
 import {UtilsService} from "../utils.service";
+import {ApexAxisChartSeries} from "ng-apexcharts";
 
 @Component({
   selector: 'app-graph',
@@ -27,19 +28,23 @@ export class GraphComponent implements OnInit, OnDestroy {
   @Input() set ticker(ticker: Ticker) {
     if (ticker && this.selected.includes(ticker.product_id)) {
       this.addTicker(ticker);
-      this.calculateData();
+      //this.calculateData();
     }
   }
 
+  @Input() candles: Partial<ApexAxisChartSeries> | null = null;
+  @Input() graph: Partial<ApexAxisChartSeries> | null = null;
+  @Input() percentage: Partial<ApexAxisChartSeries> | null = null;
+
+  @Input() period: number = 60;
   @Input() selected: string[] = [];
-
-
   @Input() products: Product[] = [];
   @Input() accounts: Account[] = [];
 
   @Output() added: EventEmitter<string> = new EventEmitter();
   @Output() removed: EventEmitter<string> = new EventEmitter();
   @Output() openCandles: EventEmitter<string> = new EventEmitter();
+  @Output() setPeriod: EventEmitter<any> = new EventEmitter();
 
   public colorScheme = {
     domain: [
@@ -57,6 +62,7 @@ export class GraphComponent implements OnInit, OnDestroy {
     ]
   };
 
+  public productIdCandles: string | null = this.selected[0];
   public tickers: any = {};
   public history: any[] = [];
 
@@ -83,9 +89,11 @@ export class GraphComponent implements OnInit, OnDestroy {
       symbols: [null, Validators.required],
     });
 
-    this.intervalSub = interval(1000).subscribe((x: number) => {
+/*    this.intervalSub = interval(1000).subscribe((x: number) => {
       this.mergeTickers();
-    });
+    });*/
+
+    this.productIdCandles = this.selected[0];
   }
 
   ngOnDestroy(): void {

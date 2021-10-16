@@ -45,9 +45,24 @@ export class UtilsService {
     return 'grey';
   }
 
-  beep() {
-    const snd = new Audio('assets/alarm.mp3');
-    snd.play();
+  timeOffset(time?: number | null) {
+    const t = time ? time * 1000 : Date.now();
+    return t - ((new Date()).getTimezoneOffset() * 60 * 1000);
   }
 
+  beepNegative() {
+    let a = new Audio('assets/alarm-down.mp3');
+    a.currentTime = 0;
+    return a.play();
+  }
+
+  beepPositive() {
+    let a = new Audio('assets/alarm-up.mp3');
+    a.currentTime = 0;
+    return a.play();
+  }
+
+  async sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 }

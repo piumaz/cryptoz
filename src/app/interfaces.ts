@@ -1,4 +1,6 @@
 
+export type Periods = 60 | 300 | 900 | 3600 | 21600 | 86400;
+
 export interface Candle {
 
 }

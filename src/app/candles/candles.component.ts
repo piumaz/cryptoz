@@ -9,142 +9,175 @@ import {
   ApexTitleSubtitle
 } from "ng-apexcharts";
 import {timeout} from "rxjs/operators";
+import {UtilsService} from "../utils.service";
 
 @Component({
   selector: 'app-candles',
   templateUrl: './candles.component.html',
-  styleUrls: ['./candles.component.css']
+  styleUrls: ['./candles.component.scss']
 })
 export class CandlesComponent implements OnInit {
 
   @Input() selected: string[] = [];
 
-  @Input() set candles(s: Partial<ApexAxisChartSeries>) {
+  @Input() set item(s: Partial<ApexAxisChartSeries>) {
     if (s) this.populate(s);
   }
 
+  @Input() set show(productId: string) {
+    if (productId) {
+      this.openSeries(productId);
+    }
+  }
+
   @ViewChild("chart") chart?: ChartComponent;
+  @ViewChild("chartGuide") chartGuide?: ChartComponent;
 
   public series: any[] = [];
   public showSeries: any[] = [];
+  public showGuide: any[] = [];
 
   public options: any = {
     xaxis: {
       type: "datetime",
-/*      labels: {
-        formatter: (value: any, timestamp: number) => {
-          return new Date(timestamp).to() // The formatter function overrides format property
-        },
-      }*/
+    },
+    yaxis: {
+      opposite: true,
+      forceNiceScale: true
+    },
+    stroke: {
+      width: 1
     },
     chart: {
+      id: "candles",
       type: "candlestick",
       height: 350,
       animations: {
         enabled: false,
       },
+      toolbar: {
+        autoSelected: "pan",
+        show: false
+      },
+      zoom: {
+        enabled: false
+      }
     },
   };
 
-  show(productId: string) {
-    this.showSeries = this.series.filter((v: any) => v.name === productId);
-    this.zoom();
+
+  public optionsGuide: any = {
+    chart: {
+      height: 160,
+      animations: {
+        enabled: false,
+      },
+      type: "line",
+      brush: {
+        enabled: true,
+        target: "candles",
+        autoScaleYaxis: true
+      },
+      selection: {
+        xaxis: {
+          // 2 hours
+          min: this.utils.timeOffset() - (2 * 3600),
+          max: this.utils.timeOffset()
+        },
+        enabled: true,
+        fill: {
+          color: "#ccc",
+          opacity: 0.4
+        },
+        stroke: {
+          color: "#0D47A1"
+        }
+      }
+    },
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      width: 1
+    },
+    xaxis: {
+      type: "datetime",
+    },
+    yaxis: {
+      labels: {
+        show: false
+      }
+    }
+  };
+
+
+  constructor(private utils: UtilsService) { }
+
+  ngOnInit(): void {
+
+  }
+
+  openSeries(productId: string) {
+    this.showSeries = this.series.filter((v: any) => v.name.includes(productId));
+    if (this.chart) {
+      this.chart.updateOptions({
+        series: this.showSeries
+      }, false, false, true);
+    }
+
+    this.addGuide();
   }
 
   populate(series: any) {
     this.series = this.series.filter((v: any) => v.name !== series.name);
     this.series.push(series);
 
-    if (this.showSeries[0] && series.name === this.showSeries[0].name) {
-      this.showSeries = [series];
-      this.zoom();
+    // if (!series.name.includes('-ema')) {
+    let arrayName = series.name.split('-');
+    arrayName.pop();
+    const name = arrayName.join('-');
+
+    if (!this.showSeries.length || this.showSeries[0] && this.showSeries[0].name.includes(name)) {
+      this.openSeries(name);
     }
   }
 
-  zoom(hours: number = 2) {
-
-    setTimeout(() => {
-      console.log('zoom');
-
-      const dateFrom = new Date();
-      const timeFrom = dateFrom.getTime() - dateFrom.getTimezoneOffset() * 60 * 1000;
-      const timeTo = timeFrom - (hours * 60 * 60 * 1000);
-      // console.log(new Date(timeFrom), new Date(timeTo));
-      this.chart?.zoomX(timeTo, timeFrom);
-    });
-
-  }
-/*
-  buildDiffSeries() {
-
-    let chartData: any[] = [];
-
-    this.getTickersProductsId().forEach((symbol: string) => {
-
-      let data: any = {
-        name: symbol,
-        series: []
-      };
-
-      const rows = [...this.history].reverse();
-      let firstTicker = rows[0][symbol];
-      rows.forEach((item: any, i: number) => {
-
-        if(!item[symbol]) {
-          item[symbol] = this.tickers[symbol][0];
-          firstTicker = item[symbol];
-        }
-
-        const ticker = item[symbol];
-
-        const itemSeries = {
-          name: i,
-          value: this.utils.diff(ticker.price, firstTicker.price),
-          price: ticker.price
-        };
-
-        data.series.unshift(itemSeries);
+  addGuide() {
+    const series = this.showSeries.filter((v: any) => !v.name.includes('-ema'));
+    if (series.length) {
+      const guideData = series[0].data.map((candle: any) => {
+        const [timestamp, open, high, low, close] = candle;
+        return [timestamp, close];
       });
 
-      chartData.push(data);
+      if (this.chartGuide) {
+        const d = new Date();
+        const b = d.getTimezoneOffset() * 60 * 1000;
+        const timestamp = d.valueOf() - b;
 
-    });
 
-    this.chartData = chartData;
-  }
-  */
-  constructor() { }
+        this.chartGuide.updateOptions({
+          chart: {
+            selection: {
+              xaxis: {
+                //min: new Date(timestamp - (2 * 60 * 60 * 1000)).getTime(),
+                min: guideData[0][0] - (guideData[0][0] - guideData[guideData.length - 1][0])/3,
+                max: guideData[0][0]//timestamp
+              }
+            },
+          }
 
-  ngOnInit(): void {
-  }
-/*
-  populateCandlesChart(productId: string) {
+        }, false, false, true);
 
-    if (!this.tickers[productId]) return;
+      }
 
-    const ticker: Ticker = this.tickers[productId][0];
-    const prevTicker: Ticker = this.tickers[productId][1] || ticker;
+      this.showGuide = [{
+        name: 'guide',
+        type: 'line',
+        data: guideData
+      }];
 
-    let serie = this.candelsChartOptions.series?.filter(item => item.name === productId);
-    if (serie && serie.length) {
-
-      // api [timestamp, price_low, price_high, price_open, price_close]
-      // graph [{ x: date, y: [O,H,L,C] }]
-      let item: any = {
-        // x: ticker.time,
-        x: serie[0].data.length.toString(),
-        y: [
-          prevTicker.price,
-          ticker.best_ask,
-          ticker.best_bid,
-          ticker.price
-        ]
-      };
-
-      serie[0].data.push(item);
-      this.candelsChartOptions.series = [serie[0]];
     }
-
   }
-  */
+
 }

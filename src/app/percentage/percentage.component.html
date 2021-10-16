@@ -1,0 +1,15 @@
+
+<ng-container *ngIf="series.length">
+
+<apx-chart
+  #chart
+  [series]="series"
+  [chart]="options.chart"
+  [xaxis]="options.xaxis"
+  [yaxis]="options.yaxis"
+  [stroke]="options.stroke"
+  [tooltip]="options.tooltip"
+  [title]="options.title"
+  [legend]="{show:true}"></apx-chart>
+
+</ng-container>

@@ -49,21 +49,29 @@
 
 <mat-tab-group dynamicHeight color="primary" class="pb-10">
 
-  <mat-tab label="Graph">
-    <app-candles
-      [candles]="candles$ | async"
-      [selected]="productsGraph"
-    ></app-candles>
 
+  <mat-tab label="Graph">
     <app-graph
       [USDEUR]="USDEUR"
+      [period]="period"
+      (setPeriod)="setPeriod($event)"
       [selected]="productsGraph"
       [ticker]="ticker$ | async"
+      [candles]="candles$ | async"
+      [graph]="graph$ | async"
+      [percentage]="percentage$ | async"
       [products]="products$ | async"
       [accounts]="accounts$ | async"
       (added)="addProductOnGraph($event)"
       (removed)="removeProductOnGraph($event)"
       class="block mt-2"></app-graph>
+  </mat-tab>
+
+  <mat-tab label="Wall Of Fame">
+
+    <app-tickers
+      [ticker]="ticker$ | async"
+      class="block mt-2"></app-tickers>
   </mat-tab>
 
   <mat-tab label="Portfolio">

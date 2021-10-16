@@ -1,13 +1,13 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription, timer} from "rxjs";
-import {filter, finalize, map, mergeMap, retry, takeUntil, tap} from "rxjs/operators";
+import {concatMap, filter, finalize, map, mergeMap, retry, take, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 import {CoinbaseProService} from "../coinbase-pro.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {WebsocketService} from "../websocket.service";
-import {Alert, TrendObserver} from "../interfaces";
+import {Alert, Candle, Periods, Product, TrendObserver} from "../interfaces";
 import {UtilsService} from "../utils.service";
 
 
@@ -25,6 +25,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public trendObserver: TrendObserver[] = [];
   public alerts: Alert[] = [];
 
+  public period: number = 60;
+
   public currencies$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public products$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public accounts$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
@@ -32,6 +34,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public fills$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public ticker$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
   public candles$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  public graph$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  public percentage$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  public ema$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   private intervalSub: Subscription = new Subscription();
 
@@ -68,46 +73,182 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.loadTickers();
 
+    this.loadIntervalCandle(60);
 
-    this.intervalSub = timer(0, 60000).subscribe((x: number) => {
+    this.candles$.pipe(
+      filter(v => v !== null),
+      tap((results) => {
+        this.graph$.next({
+          ...results,
+          name: results.productId,
+          data: results.candles,
+          type: 'candlestick',
+        });
+      }),
+      tap((results: any) => {
+        const emaPeriods = [12,26];
+        emaPeriods.forEach((period, i) => {
+          const ema = this.ema([...results.candles].reverse(), period);
 
-      //this.utils.beep();
-      this.productsGraph.forEach(productId => this.loadCandles(productId));
+          this.utils.sleep(10).then(() => {
+            this.graph$.next({
+              ...results,
+              name: `${results.productId}-ema${period}`,
+              type: 'line',
+              color: ['#FAD02C', '#2cdbfa'][i],
+              data: ema
+            });
+          });
 
+        });
+      }),
+      tap((results: any) => {
+        const percentage = results.candles.map((item: any, i: number) => {
+          const [timestamp , open, high, low, close] = item;
+          return [timestamp, this.utils.diff(close, results.candles[results.candles.length - 1][4]), close];
+        });
+
+        this.percentage$.next({
+          ...results,
+          name: results.productId,
+          data: percentage,
+          type: 'line',
+        });
+      })
+    ).subscribe();
+
+  }
+
+  loadIntervalCandle(granularity: Periods = 60) {
+    if (this.intervalSub) this.intervalSub.unsubscribe();
+    this.intervalSub = timer(0, granularity * 1000).subscribe((x: number) => {
+      this.productsGraph.forEach(productId => {
+        this.loadCandles(productId, granularity);
+      });
     });
   }
 
-  loadCandles(productId: string) {
-    /*
-    time bucket start time
-    low lowest price during the bucket interval
-    high highest price during the bucket interval
-    open opening price (first trade) in the bucket interval
-    close closing price (last trade) in the bucket interval
-    volume volume of trading activity during the bucket interval
-    */
+  setPeriod(period: number) {
+    this.period = period;
+    this.candles$.next(null);
+    this.graph$.next(null);
+    this.percentage$.next(null);
+    this.loadIntervalCandle(<Periods>period);
+  }
+
+  loadCandles(productId: string, granularity: Periods = 60) {
+
+    const period = 300 * granularity * 1000;
+    const start = Date.now();
+    const end = start - period;
+
     this.coinbaseProService.getProductCandles(productId, {
-      granularity: 60,
-      start: new Date(Date.now()+1).toUTCString()
+      granularity: granularity,
+      start: new Date(end).toUTCString(),
+      end: new Date(start).toUTCString()
+    }).pipe(
+      concatMap((v1: any[]) => {
+
+        const start = v1[v1.length-1][0] + ((new Date()).getTimezoneOffset() * 60 * 1000);
+        const end = start - period;
+
+        return this.coinbaseProService.getProductCandles(productId, {
+          granularity: granularity,
+          start: new Date(end).toUTCString(),
+          end: new Date(start).toUTCString()
+        }).pipe(
+          map(v2 => [...v1, ...v2])
+        )
+      })
+    ).subscribe(
+      (results) => {
+        this.candles$.next({
+          productId: productId,
+          candles: results
+        });
+      },
+      (err) => {
+        this.candles$.error(err);
+      }
+    );
+  }
+
+  loadPastAverage(productId: string, days: number, granularity: 60 | 300 | 900 | 3600 | 21600 | 86400 = 60, candles: any[], color?: string) {
+
+    const maxResults = 300;
+    const period = maxResults * granularity * 1000;
+    const daysx = (days * 86400) * 1000;
+
+    const start = Date.now() - daysx - period;
+    const end = Date.now() - daysx;
+
+    this.coinbaseProService.getProductCandles(productId, {
+      granularity: granularity,
+      start: new Date(start+1).toUTCString(),
+      end: new Date(end-1).toUTCString()
     }).pipe(
       map((v: any[]) => {
-
-        return v.map(item => {
-          const [time, low, high, open, close, volume] = item;
-          //[Timestamp, O, H, L, C]
-          const d = new Date(time * 1000);
-          const b = d.getTimezoneOffset() * 60 * 1000;
-          return [d.valueOf() - b, open, high, low, close];
+        return v.map((item: any, i) => {
+          const [time, low, high, open, close] = item;
+          const timestamp = candles[i][0];
+          const r = (candles[i][4] + close) / 2;
+          return [timestamp, r];
         });
 
       })
     ).subscribe(
-      result => this.candles$.next({
-        name: productId,
-        data: result
-      }),
-      err => this.candles$.error(err)
+      (result) => {
+
+        this.candles$.next({
+          name: `${productId}-average${days}`,
+          type: 'line',
+          color: color,
+          data: result
+        });
+
+      },
+      (err) => {
+        this.ema$.error(err)
+      }
     );
+  }
+
+  ema(candles: any[], time_period: number) {
+
+    const sum = candles.reduce((a, b) => a + b[4], 0);
+    const sma = sum / candles.length;
+
+    const k = 2/(time_period + 1);
+
+    let ema: any[] = [];
+    ema.push([candles[0][0], sma]); //candles[0][4];
+    candles.forEach((candle, i) => {
+      if (!i) return;
+      const [timestamp , open, high, low, close] = candle;
+      const point: number = (close * k) + (ema[i-1][1] * (1-k));
+      ema.push([timestamp, point]);
+    });
+
+    return ema;
+
+
+/*
+    let data = candles.map(v => v[4]);
+
+    const sum = data.reduce((a, b) => a + b, 0);
+    const sma = sum / data.length;
+
+    const k = 2/(time_period + 1);
+
+    let emaData = [];
+    emaData[0] = sma; //data[0];
+    for (let i = 1; i < data.length; i++) {
+      let newPoint: number = (data[i] * k) + (emaData[i-1] * (1-k));
+      //let newPoint2: number = (k * Number(data[i])) + ((1 - k) * emaData[i-1]);
+      emaData.push(newPoint);
+    }
+
+    return emaData;*/
   }
 
   ngOnDestroy(): void {
@@ -197,6 +338,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.wsService.connect();
 
     this.subscribeWsTickers(['USDT-EUR']);
+
+    this.products$.pipe(
+      take(1),
+      map(products => products.map((product: Product) => product.id)),
+      tap((results) => this.subscribeWsTickers(results))
+    ).subscribe();
 
 
     this.wsService.wsSubject$.pipe(
