@@ -136,6 +136,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadIntervalCandle(<Periods>period);
   }
 
+  opendCandles(productId: string) {
+    this.loadCandles(productId, <Periods>this.period);
+  }
+
   loadCandles(productId: string, granularity: Periods = 60) {
 
     const period = 300 * granularity * 1000;
@@ -260,6 +264,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   addProductOnGraph(productId: string) {
     if (!this.productsGraph.includes(productId)) {
       this.productsGraph.push(productId);
+      this.opendCandles(productId);
       this.addProductTicker(productId);
     }
   }

@@ -1,7 +1,9 @@
-<ng-container *ngIf="showSeries.length && showGuide.length">
+<!--<ng-container *ngIf="showSeries.length && showGuide.length">-->
+<ng-container>
 
   <apx-chart #chart
-    [series]="showSeries"
+    [series]="series"
+    [noData]="options.noData"
     [chart]="options.chart"
     [yaxis]="options.yaxis"
     [xaxis]="options.xaxis"

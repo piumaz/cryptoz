@@ -65,4 +65,27 @@ export class UtilsService {
   async sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
+
+  ema(prices: number[], time_period: number) {
+    const sum: number = prices.reduce((a, b) => {
+      return Number(a) + Number(b);
+    }, 0);
+    const sma = sum / prices.length;
+
+    const k = 2/(time_period + 1);
+
+    let ema: any[] = [];
+    ema.push(sma);
+    prices.forEach((price, i) => {
+      if (!i) return;
+      const point: number = (Number(price) * k) + (ema[i-1] * (1-k));
+      ema.push(point);
+    });
+
+    return ema;
+  }
+
+  productSymbol(productId: string) {
+    return productId.split('-')[0];
+  }
 }

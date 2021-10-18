@@ -25,7 +25,8 @@
     *ngFor="let symbol of selected"
     [removable]="true"
     [selected]="productIdCandles === symbol ? true : false"
-    (removed)="removeSelectedManagedSymbols(symbol)" (click)="productIdCandles = symbol">
+    (removed)="removeSelectedManagedSymbols(symbol)"
+    (click)="openCandles.emit(symbol); productIdCandles = symbol">
     {{symbol}}
     <mat-icon matChipRemove>cancel</mat-icon>
   </mat-chip>
@@ -42,12 +43,12 @@
 </div>
 
 <div class="flex flex-col md:flex-row gap-2">
-  <ng-container *ngIf="graph">
+  <ng-container *ngIf="graph && productIdCandles">
     <app-candles
       class="block shadow rounded-lg ring-1 ring-gray-900 ring-opacity-5 md:w-2/3"
       [item]="graph"
       [selected]="selected"
-      [show]="productIdCandles || selected[0]"
+      [show]="productIdCandles"
     ></app-candles>
   </ng-container>
 

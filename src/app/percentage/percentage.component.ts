@@ -64,14 +64,20 @@ export class PercentageComponent implements OnInit {
   }
 
   populate(series: any) {
+    if (!this.selected.includes(series.name)) {
+      this.series = this.series
+        .filter(item => !this.selected.includes(series.name));
+      return;
+    }
+
     let done = false;
     this.series = this.series.map((item: any, i: number) => {
-      if (item.name === series.name) {
-        done = true;
-        return series;
-      }
-      return item;
-    });
+        if (item.name === series.name) {
+          done = true;
+          return series;
+        }
+        return item;
+      });
 
     if (!done) this.series.push(series);
 

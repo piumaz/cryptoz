@@ -21,12 +21,14 @@ export class CandlesComponent implements OnInit {
   @Input() selected: string[] = [];
 
   @Input() set item(s: Partial<ApexAxisChartSeries>) {
-    if (s) this.populate(s);
+    this.populate(s);
   }
 
   @Input() set show(productId: string) {
-    if (productId) {
-      this.openSeries(productId);
+    if (this.showProductId !== productId) {
+      this.showProductId = productId;
+      this.productSeries = [];
+      this.series = [];
     }
   }
 
@@ -34,7 +36,8 @@ export class CandlesComponent implements OnInit {
   @ViewChild("chartGuide") chartGuide?: ChartComponent;
 
   public series: any[] = [];
-  public showSeries: any[] = [];
+  public productSeries: any[] = [];
+  public showProductId: string | null = null;
   public showGuide: any[] = [];
 
   public options: any = {
@@ -63,6 +66,9 @@ export class CandlesComponent implements OnInit {
         enabled: false
       }
     },
+    noData: {
+      text: 'loading...',
+    }
   };
 
 
@@ -117,11 +123,10 @@ export class CandlesComponent implements OnInit {
 
   }
 
-  openSeries(productId: string) {
-    this.showSeries = this.series.filter((v: any) => v.name.includes(productId));
+  open() {
     if (this.chart) {
       this.chart.updateOptions({
-        series: this.showSeries
+        series: this.series
       }, false, false, true);
     }
 
@@ -129,21 +134,29 @@ export class CandlesComponent implements OnInit {
   }
 
   populate(series: any) {
-    this.series = this.series.filter((v: any) => v.name !== series.name);
-    this.series.push(series);
+    if (!series || !series.name.includes(this.showProductId)) {
+      return;
+    }
 
-    // if (!series.name.includes('-ema')) {
-    let arrayName = series.name.split('-');
-    arrayName.pop();
-    const name = arrayName.join('-');
+    let done = false;
+    this.productSeries = this.productSeries.map((item: any, i: number) => {
+      if (item.name === series.name) {
+        done = true;
+        return series;
+      }
+      return item;
+    });
 
-    if (!this.showSeries.length || this.showSeries[0] && this.showSeries[0].name.includes(name)) {
-      this.openSeries(name);
+    if (!done) this.productSeries.push(series);
+
+    if (this.productSeries.length >= 3) {
+      this.series = [...this.productSeries]
+      this.open();
     }
   }
 
   addGuide() {
-    const series = this.showSeries.filter((v: any) => !v.name.includes('-ema'));
+    const series = this.series.filter((v: any) => v.name === this.showProductId);
     if (series.length) {
       const guideData = series[0].data.map((candle: any) => {
         const [timestamp, open, high, low, close] = candle;

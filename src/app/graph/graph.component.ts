@@ -216,6 +216,7 @@ export class GraphComponent implements OnInit, OnDestroy {
   }
 
   selectedManagedSymbol(event: MatAutocompleteSelectedEvent): void {
+    this.productIdCandles = event.option.viewValue;
     this.added.emit(event.option.viewValue);
     if (this.symbolsInput) {
       this.uiForm.get('symbols')?.patchValue(null);
