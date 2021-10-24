@@ -17,8 +17,19 @@ export interface TrendObserver {
   product_id: string;
   price: number;
   size: number;
-  alertUp: number;
-  alertDown: number;
+
+  newPrice: number;
+  oldPrice: number;
+  stop: number;
+  stopLoss: boolean;
+  sellOnStop: boolean;
+
+  oldFunds: number;
+  newFunds: number;
+  earnFunds: number;
+  earnPrice: number;
+  diffPrice: number;
+  color: string;
 }
 
 export interface Ticker {

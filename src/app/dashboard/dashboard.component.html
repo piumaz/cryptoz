@@ -1,101 +1,108 @@
 
 <div class="flex flex-row justify-between place-items-stretch my-4">
   <p>
-    From {{startedAt | date : 'short'}}
+<!--    From {{startedAt | date : 'short'}}-->
   </p>
   <p>
     {{1 / USDEUR | currency : 'USD'}}/{{USDEUR | currency : 'EUR'}}
   </p>
 </div>
 
-<div class="flex flex-col md:flex-row gap-2">
-  <app-swap
-    class="block p-2 mb-4 bg-indigo-50 shadow overflow-hidden rounded-lg"
-    [USDEUR]="USDEUR"
-    [products]="products$ | async"
-    [accounts]="accounts$ | async"
-    [loading]="swapLoading"
-    (swap)="swap($event)"
-    (sell)="sell($event)"
-    (buy)="buy($event)"
-  ></app-swap>
+<ng-container *ngIf="products$ | async as products">
+  <div class="flex flex-col md:flex-row gap-2">
 
-  <app-trend-observer
-    class="block p-2 mb-4 shadow overflow-hidden rounded-lg flex-1"
-    [USDEUR]="USDEUR"
-    [observer]="trendObserver"
-    [ticker]="ticker$ | async"
-    [products]="products$ | async"
-    [accounts]="accounts$ | async"
-    [currencies]="currencies$ | async"
-    [orders]="orders$ | async"
-    [fills]="fills$ | async"
-    (addProductOnGraph)="addProductOnGraph($event)"
-    (added)="addTrendObserver($event)"
-    (removed)="removeTrendObserver($event)"
-  ></app-trend-observer>
-
-  <app-alerts
-    class="block p-2 mb-4 shadow overflow-hidden rounded-lg flex-1"
-    [USDEUR]="USDEUR"
-    [alerts]="alerts"
-    (alertsChange)="alerts = $event"
-    [ticker]="ticker$ | async"
-    [products]="products$ | async"
-    (added)="addAlert($event)"
-    (removed)="removeAlert($event)"
-  ></app-alerts>
-</div>
-
-<mat-tab-group dynamicHeight color="primary" class="pb-10">
-
-
-  <mat-tab label="Graph">
-    <app-graph
+    <app-trend-observer
+      class="box mb-4 md:w-2/3"
       [USDEUR]="USDEUR"
-      [period]="period"
-      (setPeriod)="setPeriod($event)"
-      (openCandles)="opendCandles($event)"
-      [selected]="productsGraph"
+      [observer]="trendObserver"
       [ticker]="ticker$ | async"
-      [candles]="candles$ | async"
-      [graph]="graph$ | async"
-      [percentage]="percentage$ | async"
-      [products]="products$ | async"
+      [products]="products"
       [accounts]="accounts$ | async"
-      (added)="addProductOnGraph($event)"
-      (removed)="removeProductOnGraph($event)"
-      class="block mt-2"></app-graph>
-  </mat-tab>
-
-  <mat-tab label="Wall Of Fame">
-
-    <app-tickers
-      [ticker]="ticker$ | async"
-      class="block mt-2"></app-tickers>
-  </mat-tab>
-
-  <mat-tab label="Portfolio">
-    <app-wallet
-      [USDEUR]="USDEUR"
-      [ticker]="ticker$ | async"
       [currencies]="currencies$ | async"
-      [accounts]="accounts$ | async"
-      class="block mt-2"></app-wallet>
-  </mat-tab>
-
-  <mat-tab label="Orders">
-    <app-orders
-      [USDEUR]="USDEUR"
       [orders]="orders$ | async"
       [fills]="fills$ | async"
-      [products]="products$ | async"
-      (productSelected)="loadFills($event)"
-      (addTrendObserver)="addTrendObserver($event)"
-      class="block mt-2"></app-orders>
-  </mat-tab>
+      (addProductOnGraph)="addProductOnGraph($event)"
+      (added)="addTrendObserver($event)"
+      (removed)="removeTrendObserver($event)"
+      (update)="updateTrendObserver($event)"
+      (sell)="sell($event)"
+    ></app-trend-observer>
 
-</mat-tab-group>
+    <div class="flex-1">
+      <app-swap
+        class="box mb-4 bg-indigo-50"
+        [USDEUR]="USDEUR"
+        [products]="products"
+        [accounts]="accounts$ | async"
+        [loading]="swapLoading"
+        (swap)="swap($event)"
+        (sell)="sell($event)"
+        (buy)="buy($event)"
+      ></app-swap>
+
+      <app-alerts
+        class="box mb-4"
+        [USDEUR]="USDEUR"
+        [alerts]="alerts"
+        (alertsChange)="alerts = $event"
+        [ticker]="ticker$ | async"
+        [products]="products"
+        (added)="addAlert($event)"
+        (removed)="removeAlert($event)"
+      ></app-alerts>
+    </div>
+
+  </div>
+
+  <mat-tab-group animationDuration="1" dynamicHeight color="primary" class="pb-10">
+
+    <mat-tab label="Graph">
+      <app-graph
+        [USDEUR]="USDEUR"
+        [period]="period"
+        (setPeriod)="setPeriod($event)"
+        (openCandles)="opendCandles($event)"
+        [selected]="productsGraph"
+        [ticker]="ticker$ | async"
+        [candles]="candles$ | async"
+        [graph]="graph$ | async"
+        [percentage]="percentage$ | async"
+        [products]="products"
+        [accounts]="accounts$ | async"
+        (added)="addProductOnGraph($event)"
+        (removed)="removeProductOnGraph($event)"
+        class="block mt-2"></app-graph>
+    </mat-tab>
+
+<!--    <mat-tab label="Wall Of Fame">
+      <app-tickers
+        [ticker]="ticker$ | async"
+        class="block mt-2"></app-tickers>
+    </mat-tab>-->
+
+    <mat-tab label="Portfolio">
+      <app-wallet
+        [USDEUR]="USDEUR"
+        [ticker]="ticker$ | async"
+        [currencies]="currencies$ | async"
+        [accounts]="accounts$ | async"
+        class="block mt-2"></app-wallet>
+    </mat-tab>
+
+    <mat-tab label="Orders">
+      <app-orders
+        [USDEUR]="USDEUR"
+        [orders]="orders$ | async"
+        [fills]="fills$ | async"
+        [products]="products"
+        (productSelected)="loadFills($event)"
+        (addTrendObserver)="addTrendObserver($event)"
+        class="block mt-2"></app-orders>
+    </mat-tab>
+
+  </mat-tab-group>
+</ng-container>
+
 
 
 

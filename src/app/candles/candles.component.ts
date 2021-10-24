@@ -46,7 +46,7 @@ export class CandlesComponent implements OnInit {
     },
     yaxis: {
       opposite: true,
-      forceNiceScale: true
+      forceNiceScale: false
     },
     stroke: {
       width: 1
@@ -149,8 +149,9 @@ export class CandlesComponent implements OnInit {
 
     if (!done) this.productSeries.push(series);
 
-    if (this.productSeries.length >= 3) {
-      this.series = [...this.productSeries]
+    if (this.productSeries.length >= 4) {
+      this.series = [...this.productSeries];
+      this.productSeries = [];
       this.open();
     }
   }
@@ -174,7 +175,7 @@ export class CandlesComponent implements OnInit {
             selection: {
               xaxis: {
                 //min: new Date(timestamp - (2 * 60 * 60 * 1000)).getTime(),
-                min: guideData[0][0] - (guideData[0][0] - guideData[guideData.length - 1][0])/3,
+                min: guideData[0][0] - (guideData[0][0] - guideData[guideData.length - 1][0])/6,
                 max: guideData[0][0]//timestamp
               }
             },

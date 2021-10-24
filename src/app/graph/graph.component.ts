@@ -2,10 +2,10 @@ import {
   Component,
   ElementRef,
   EventEmitter,
-  Input,
+  Input, OnChanges,
   OnDestroy,
   OnInit,
-  Output,
+  Output, SimpleChanges,
   ViewChild
 } from '@angular/core';
 import {interval, Subject, Subscription} from "rxjs";
@@ -21,16 +21,11 @@ import {ApexAxisChartSeries} from "ng-apexcharts";
   templateUrl: './graph.component.html',
   styleUrls: ['./graph.component.scss']
 })
-export class GraphComponent implements OnInit, OnDestroy {
+export class GraphComponent implements OnInit, OnChanges, OnDestroy {
 
   @Input() USDEUR: number = 1;
 
-  @Input() set ticker(ticker: Ticker) {
-    if (ticker && this.selected.includes(ticker.product_id)) {
-      this.addTicker(ticker);
-      //this.calculateData();
-    }
-  }
+  @Input() ticker: Ticker | null = null;
 
   @Input() candles: Partial<ApexAxisChartSeries> | null = null;
   @Input() graph: Partial<ApexAxisChartSeries> | null = null;
@@ -94,6 +89,16 @@ export class GraphComponent implements OnInit, OnDestroy {
     });*/
 
     this.productIdCandles = this.selected[0];
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.ticker && changes.ticker.currentValue) {
+      const t = changes.ticker.currentValue;
+      if (this.selected.includes(t.product_id)) {
+        this.addTicker(t);
+        //this.calculateData();
+      }
+    }
   }
 
   ngOnDestroy(): void {

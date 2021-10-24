@@ -26,7 +26,8 @@
     [removable]="true"
     [selected]="productIdCandles === symbol ? true : false"
     (removed)="removeSelectedManagedSymbols(symbol)"
-    (click)="openCandles.emit(symbol); productIdCandles = symbol">
+    (click)="openCandles.emit(symbol); productIdCandles = symbol"
+    class="m-2">
     {{symbol}}
     <mat-icon matChipRemove>cancel</mat-icon>
   </mat-chip>
@@ -36,32 +37,39 @@
   <!--{60, 300, 900, 3600, 21600, 86400}-->
   <!--one minute, five minutes, fifteen minutes, one hour, six hours, and one day, respectively.one minute, five minutes, fifteen minutes, one hour, six hours, and one day, respectively.-->
   <ng-container *ngFor="let item of [60, 300, 900, 3600, 21600, 86400]; let i = index">
-    <button [color]="item === period ? 'primary' : null" mat-flat-button (click)="setPeriod.emit(item)">
+    <a [color]="item === period ? 'primary' : null" mat-button style="min-width: auto" (click)="setPeriod.emit(item); productIdCandles = productIdCandles+''">
       {{['1m', '5m', '15m', '1H', '6H', '1D'][i]}}
-    </button>
+    </a>
   </ng-container>
 </div>
+
+<!--<app-test
+  class="box"
+></app-test>-->
 
 <div class="flex flex-col md:flex-row gap-2">
   <ng-container *ngIf="graph && productIdCandles">
     <app-candles
-      class="block shadow rounded-lg ring-1 ring-gray-900 ring-opacity-5 md:w-2/3"
+      class="box md:w-2/3"
       [item]="graph"
       [selected]="selected"
       [show]="productIdCandles"
     ></app-candles>
   </ng-container>
 
-  <ng-container *ngIf="percentage">
-    <app-percentage
-      class="shadow rounded-lg ring-1 ring-gray-900 ring-opacity-5 flex-1"
-      [percentage]="percentage"
-      [selected]="selected"
-    ></app-percentage>
-  </ng-container>
+  <app-tickers
+    [ticker]="ticker"
+    class="box flex-1"></app-tickers>
 
 </div>
 
+<ng-container *ngIf="percentage">
+  <app-percentage
+    class="shadow rounded-lg ring-1 ring-gray-900 ring-opacity-5"
+    [percentage]="percentage"
+    [selected]="selected"
+  ></app-percentage>
+</ng-container>
 
 
 

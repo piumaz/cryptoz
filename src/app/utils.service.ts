@@ -62,8 +62,18 @@ export class UtilsService {
     return a.play();
   }
 
+  beepStop() {
+    let a = new Audio('assets/fail.mp3');
+    a.currentTime = 0;
+    return a.play();
+  }
+
   async sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  productSymbol(productId: string) {
+    return productId.split('-')[0];
   }
 
   ema(prices: number[], time_period: number) {
@@ -85,7 +95,19 @@ export class UtilsService {
     return ema;
   }
 
-  productSymbol(productId: string) {
-    return productId.split('-')[0];
+  stop(price: number, newPrice: number, oldPrice: number, oldStop: number) {
+    if (price >= newPrice) {
+      return price;
+    }
+
+    if (newPrice > oldPrice) {
+      // increase the stop
+      const diff = newPrice - ((newPrice - price) * 0.15);
+      return diff + ((newPrice - diff) * 0.5);
+    }
+
+    return oldStop;
+
   }
+
 }

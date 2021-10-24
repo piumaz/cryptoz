@@ -28,6 +28,7 @@ import { CandlesComponent } from './candles/candles.component';
 import { AlertsComponent } from './alerts/alerts.component';
 import { PercentageComponent } from './percentage/percentage.component';
 import { TickersComponent } from './tickers/tickers.component';
+import { TestComponent } from './test/test.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { TickersComponent } from './tickers/tickers.component';
     AlertsComponent,
     PercentageComponent,
     PercentageComponent,
-    TickersComponent
+    TickersComponent,
+    TestComponent
   ],
   imports: [
     BrowserModule,

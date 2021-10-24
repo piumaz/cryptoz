@@ -19,6 +19,7 @@
       <label>Size:</label>
       <input type="text" formControlName="size" class="w-full">
     </div>
+
     <div>
       <label>&nbsp;</label>
       <button mat-icon-button color="primary"
@@ -32,10 +33,10 @@
 
 </form>
 
-
 <table class="border-collapse bg-transparent min-w-full divide-y divide-gray-200 text-xs">
 <tbody class="divide-y divide-gray-200">
   <tr *ngFor="let item of observer; let i = index">
+
     <td class="px-0">
       <strong class="text-primary">{{item.product_id}}</strong>
       <div *ngIf="item.size">
@@ -43,24 +44,45 @@
       </div>
     </td>
     <td class="px-2 text-right">
-      {{item.price}}
-      <div *ngIf="item.size">
-        <small>{{oldFunds(item)}}</small>
-      </div>
+      <ng-container *ngIf="item.price">
+        {{item.price}}
+        <div *ngIf="item.size">
+          <small>{{item.oldFunds}}</small>
+        </div>
+      </ng-container>
     </td>
     <td class="px-2 text-right bg-indigo-50">
-      {{prices[item.product_id]}}
-      <div *ngIf="item.size">
-        <small>{{newFunds(item)}}</small>
-      </div>
+      <mat-icon class="animate-spin" inline *ngIf="!item.newPrice">refresh</mat-icon>
+      <ng-container *ngIf="item.newPrice">
+        <mat-icon inline *ngIf="item.newPrice > item.oldPrice">keyboard_arrow_up</mat-icon>
+        <mat-icon inline *ngIf="item.newPrice < item.oldPrice">keyboard_arrow_down</mat-icon>
+        &nbsp;{{item.newPrice}}
+        <div *ngIf="item.size">
+          <small>{{item.newFunds}}</small>
+        </div>
+      </ng-container>
     </td>
-    <td  class="px-2 text-right" [style.color]="getPriceColor(item)">
-      <strong>{{utils.diff(prices[item.product_id], item.price)}}% ({{earn(item.price, prices[item.product_id])}})</strong><br>
-      <div *ngIf="item.size">
-        <small>{{earn(oldFunds(item), newFunds(item))}}</small>
-      </div>
+    <td  class="px-2 text-right">
+      <ng-container *ngIf="item.price && item.size">
+        <strong>{{item.stop}}</strong><br>
+        <span *ngIf="item.stopLoss" class="block text-red-500 animate-bounce">STOPLOSS</span>
+        <mat-checkbox [disabled]="!item.size" [checked]="item.sellOnStop" (click)="changeStop(item, $event)">
+          <span [class.text-red-500]="item.price > item.newPrice">Stop</span>
+        </mat-checkbox>
+      </ng-container>
+    </td>
+    <td  class="px-2 text-right" [style.color]="item.color">
+      <ng-container *ngIf="item.price">
+        <strong>{{item.diffPrice}}% <!--({{item.earnPrice}})--></strong><br>
+        <div *ngIf="item.size">
+          <small>{{item.earnFunds}}</small>
+        </div>
+      </ng-container>
     </td>
     <td class="px-0 text-right">
+      <button mat-icon-button color="primary" (click)="sellByUser(item)">
+        <mat-icon>sell</mat-icon>
+      </button>
       <button mat-icon-button color="accent" (click)="addProductOnGraph.emit(item.product_id)">
         <mat-icon>trending_up</mat-icon>
       </button>

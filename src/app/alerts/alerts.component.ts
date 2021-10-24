@@ -16,7 +16,7 @@ export class AlertsComponent implements OnInit {
   @Input() USDEUR: number = 1;
 
   @Input() set ticker(value: Ticker) {
-    if (value) {
+    if (value && this.getProductsId().includes(value.product_id)) {
       this.prices[value.product_id] = value.price;
       this.alert(value);
     }
@@ -49,6 +49,13 @@ export class AlertsComponent implements OnInit {
     });
   }
 
+  getProductsId() {
+    return this.alerts.reduce((accumulator: string[], item) => {
+      accumulator.push(item.product_id);
+      return accumulator;
+    }, []);
+  }
+
   add() {
     const value = this.form.value;
     this.added.emit(value);
@@ -60,6 +67,10 @@ export class AlertsComponent implements OnInit {
       return;
     }
     this.removed.emit(index);
+  }
+
+  getPrice(item: Alert) {
+    return this.prices[item.product_id];
   }
 
   isDown(item: Alert) {

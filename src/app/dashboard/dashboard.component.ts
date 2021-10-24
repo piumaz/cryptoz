@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription, timer} from "rxjs";
+import {BehaviorSubject, forkJoin, interval, Observable, of, Subject, Subscription, throwError, timer} from "rxjs";
 import {concatMap, filter, finalize, map, mergeMap, retry, take, takeUntil, tap} from "rxjs/operators";
 import {HttpClient} from "@angular/common/http";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
@@ -7,8 +7,9 @@ import {MatAutocompleteSelectedEvent} from "@angular/material/autocomplete";
 import {CoinbaseProService} from "../coinbase-pro.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {WebsocketService} from "../websocket.service";
-import {Alert, Candle, Periods, Product, TrendObserver} from "../interfaces";
+import {Alert, Candle, Periods, Product, Ticker, TrendObserver} from "../interfaces";
 import {UtilsService} from "../utils.service";
+import {PatternService} from "../pattern.service";
 
 
 @Component({
@@ -28,7 +29,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public period: number = 60;
 
   public currencies$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
-  public products$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
+  public products$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
   public accounts$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public orders$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
   public fills$: BehaviorSubject<any> = new BehaviorSubject<any>([]);
@@ -51,12 +52,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private coinbaseProService: CoinbaseProService,
     private wsService: WebsocketService,
     private notify: MatSnackBar,
-    private utils: UtilsService
+    private utils: UtilsService,
+    private patternService: PatternService,
   ) {}
 
   ngOnInit(): void {
 
     const storage = this.getStorage();
+    timer(0, 2000).subscribe((x: number) => {
+      this.setStorage();
+    });
+
+
     this.productsGraph = storage.productsGraph || [];
     this.trendObserver = storage.trendObserver || [];
     this.alerts = storage.alerts || [];
@@ -72,6 +79,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadOrders();
 
     this.loadTickers();
+    this.loadWsTickers();
 
     this.loadIntervalCandle(60);
 
@@ -86,7 +94,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         });
       }),
       tap((results: any) => {
-        const emaPeriods = [12,26];
+        const emaPeriods = [12,26,90];
         emaPeriods.forEach((period, i) => {
           const ema = this.ema([...results.candles].reverse(), period);
 
@@ -95,12 +103,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
               ...results,
               name: `${results.productId}-ema${period}`,
               type: 'line',
-              color: ['#FAD02C', '#2cdbfa'][i],
+              color: ['#FAD02C', '#2cdbfa', '#136978'][i],
               data: ema
             });
           });
 
         });
+      }),
+      tap((results: any) => {
+        // test patterns
+        const candles = results.candles;
+        const productId = results.productId;
+
+        const detect = this.patternService.check(candles);
+        if (detect) {
+          console.log(productId)
+        }
+
       }),
       tap((results: any) => {
         const percentage = results.candles.map((item: any, i: number) => {
@@ -119,6 +138,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   }
 
+  stopIntervalCandle() {
+    if (this.intervalSub) this.intervalSub.unsubscribe();
+  }
+  restartItervalCandle() {
+    this.loadIntervalCandle(<Periods>this.period);
+  }
   loadIntervalCandle(granularity: Periods = 60) {
     if (this.intervalSub) this.intervalSub.unsubscribe();
     this.intervalSub = timer(0, granularity * 1000).subscribe((x: number) => {
@@ -234,25 +259,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
 
     return ema;
-
-
-/*
-    let data = candles.map(v => v[4]);
-
-    const sum = data.reduce((a, b) => a + b, 0);
-    const sma = sum / data.length;
-
-    const k = 2/(time_period + 1);
-
-    let emaData = [];
-    emaData[0] = sma; //data[0];
-    for (let i = 1; i < data.length; i++) {
-      let newPoint: number = (data[i] * k) + (emaData[i-1] * (1-k));
-      //let newPoint2: number = (k * Number(data[i])) + ((1 - k) * emaData[i-1]);
-      emaData.push(newPoint);
-    }
-
-    return emaData;*/
   }
 
   ngOnDestroy(): void {
@@ -287,10 +293,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   addTrendObserver(item: any) {
     this.trendObserver.unshift(item);
+    this.trendObserver = [...this.trendObserver];
     this.addProductTicker(item.product_id);
+  }
+  updateTrendObserver(item: any) {
+    const updated = this.trendObserver.map(ob => {
+      if (ob.product_id === item.product_id && ob.price === item.price) {
+        return item;
+      }
+
+      return ob;
+    });
+    this.trendObserver = [...updated];
   }
   removeTrendObserver(index: number) {
     const item = this.trendObserver.splice(index, 1)[0];
+    this.trendObserver = [...this.trendObserver];
     this.removeProductTicker(item.product_id);
   }
 
@@ -339,12 +357,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadTickers() {
+  loadWsTickers() {
     this.wsService.connect();
 
     this.subscribeWsTickers(['USDT-EUR']);
 
     this.products$.pipe(
+      filter(v => v !== null),
       take(1),
       map(products => products.map((product: Product) => product.id)),
       tap((results) => this.subscribeWsTickers(results))
@@ -370,11 +389,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         }
 
-        // it's a good place
-        this.setStorage();
-
       }
     );
+  }
+
+  loadTickers() {
+    // per tutti gli account con soldi
+    // più quelli che voglio osservare
+    const accountsWithMoney = this.accounts$.getValue().filter(
+      (item: any) => item.available > 0 && !['EUR','USDT'].includes(item.currency)
+    ).map(
+      (item: any) => item.currency + '-USDT'
+    );
+
+    const productsTrendObserver = this.trendObserver.map(v => v.product_id);
+
+    const products = [...new Set([
+      ...accountsWithMoney,
+      ...this.productsGraph,
+      ...productsTrendObserver
+    ])];
+
+    products.forEach((productId: string) => {
+      this.coinbaseProService.getProductTicker(productId).pipe(
+        takeUntil(this.destroy$),
+      ).subscribe(
+        result => this.ticker$.next({
+          ...result,
+          product_id: productId
+        }),
+        err => this.ticker$.error(err)
+      );
+    });
+
   }
 
   loadAccounts() {
@@ -396,7 +443,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         );
 
         return r;
-      })
+      }),
     ).subscribe(
       result => this.accounts$.next(result),
       err => this.accounts$.error(err)
@@ -480,7 +527,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.swapLoading = true;
     this.coinbaseProService.sellMarket(sellProduct.id, {size: sellSize}).pipe(
       tap((r) => {
-        this.notify.open(sellProduct.id  + ' selled!');
+        this.notify.open(sellProduct.id  + ' selled!', 'Ok', {
+          duration: 5000
+        });
         console.log('response sell', r);
       }),
 
@@ -516,18 +565,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
           })
         ).subscribe(
           (result) => {
-            this.notify.open(buyProduct.id  + ' buyed!');
+            this.notify.open(buyProduct.id  + ' buyed!', 'Ok', {
+              duration: 5000
+            });
             console.log('response buy', result);
           },
           error => {
             console.log(error.error.message);
-            this.notify.open('Buy error: ' + error.error.message);
+            this.notify.open('Buy error: ' + error.error.message, 'Ok', {
+              duration: 5000
+            });
           });
 
       },
       error => {
         console.log(error.error.message);
-        this.notify.open('Sell error: ' + error.error.message);
+        this.notify.open('Sell error: ' + error.error.message, 'Ok', {
+          duration: 5000
+        });
       });
 
   }
@@ -543,14 +598,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
       finalize(() => {
         this.loadAccounts();
         this.swapLoading = false;
+
+        this.trendObserver = [...this.trendObserver].map(item => {
+          if (item.product_id === sellProductId) {
+            return {
+              ...item,
+              size: 0,
+              sellOnStop: false
+            };
+          }
+
+          return item;
+        });
+
       })
     ).subscribe(
       (r) => {
-        this.notify.open(sellProductId  + ' selled!');
+        this.notify.open(sellProductId  + ' selled!', 'Ok', {
+          duration: 5000
+        });
       },
       error => {
         console.log(error.error.message);
-        this.notify.open('Sell error: ' + error.error.message);
+        this.notify.open('Sell error: ' + error.error.message, 'Ok', {
+          duration: 5000
+        });
       });
 
   }
@@ -569,67 +641,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     ).subscribe(
       (result) => {
-        this.notify.open(buyProductId  + ' buyed!');
+        this.notify.open(buyProductId  + ' buyed!', 'Ok', {
+          duration: 5000
+        });
       },
       error => {
         console.log(error.error.message);
-        this.notify.open('Buy error: ' + error.error.message);
+        this.notify.open('Buy error: ' + error.error.message, 'Ok', {
+          duration: 5000
+        });
       });
   }
-
-/*
-  loadPrices() {
-
-    let observables: any = {};
-
-    // per tutti gli account con soldi
-    // più quelli che voglio osservare
-    const accountsWithMoney = this.accounts$.getValue().filter(
-      (item: any) => item.available > 0 && !['EUR','USDT'].includes(item.currency)
-    ).map(
-      (item: any) => item.currency + '-USDT'
-    );
-
-    const productsGraphSelected = this.getProductsGraphSelected();
-
-    const products = [...new Set([
-      ...accountsWithMoney,
-      ...productsGraphSelected
-    ])];
-
-    products.forEach((productId: string) => {
-      observables[productId] = this.coinbaseProService.getProductTicker(productId).pipe(
-        map((result: any) => {
-          return {
-            symbol: productId,
-            price: Number(result.price)
-          };
-        })
-      );
-    });
-
-
-    forkJoin(observables).pipe(
-      takeUntil(this.destroy$),
-      map((result: any) => {
-
-        let rows: any[] = [];
-
-        const symbols = Object.keys(result);
-
-        symbols.forEach((symbol: string) => {
-          rows.push(result[symbol]);
-        });
-
-        return rows;
-      })
-    ).subscribe(
-      result => this.prices$.next(result),
-      err => this.prices$.error(err)
-    );
-
-  }
-*/
 
   setStorage() {
     const storage: any = {
